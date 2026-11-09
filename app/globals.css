@@ -1,0 +1,153 @@
+@import "tailwindcss";
+
+/* ===========================================================================
+   BIRTHDAY://PROTOCOL — design tokens
+   Dark canvas, aksen violet/cyan, panel bergaya repository/pull request.
+   =========================================================================== */
+@theme {
+  --color-void: #06060c;
+  --color-void-2: #0a0a14;
+  --color-panel: #0e0e1b;
+  --color-panel-2: #141427;
+  --color-edge: #22223d;
+  --color-edge-bright: #32325c;
+
+  --color-violet-neon: #a855f7;
+  --color-violet-deep: #6d28d9;
+  --color-cyan-neon: #22d3ee;
+  --color-cyan-deep: #0e7490;
+
+  --color-ink: #f2f0ff;
+  --color-ink-muted: #a9a6c9;
+  --color-ink-faint: #7a7799;
+
+  --color-ok: #34d399;
+  --color-warn: #fbbf24;
+  --color-bad: #fb7185;
+
+  --font-display: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, "SF Mono", Menlo, monospace;
+
+  --radius-panel: 14px;
+}
+
+:root {
+  color-scheme: dark;
+  --grid-line: color-mix(in oklab, var(--color-violet-neon) 7%, transparent);
+}
+
+* {
+  min-width: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: var(--color-void);
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  overflow-x: hidden;
+  /* Grid halus + dua pusat cahaya. Dijaga redup agar kontras teks tetap aman. */
+  background-image:
+    radial-gradient(ellipse 70% 50% at 15% -5%, rgba(109, 40, 217, 0.26), transparent 70%),
+    radial-gradient(ellipse 60% 45% at 92% 8%, rgba(14, 116, 144, 0.22), transparent 70%),
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 56px 56px, 56px 56px;
+  background-attachment: fixed, fixed, scroll, scroll;
+}
+
+/* --- Fokus keyboard yang selalu terlihat --------------------------------- */
+:focus-visible {
+  outline: 2px solid var(--color-cyan-neon);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* --- Utilitas komponen --------------------------------------------------- */
+@utility panel {
+  background-color: color-mix(in oklab, var(--color-panel) 88%, transparent);
+  border: 1px solid var(--color-edge);
+  border-radius: var(--radius-panel);
+  backdrop-filter: blur(10px);
+}
+
+@utility label-mono {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+}
+
+/* Target sentuh minimum 44x44 px (PRD §8). */
+@utility tap {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* --- Scanline hologram untuk hero nama tamu ------------------------------- */
+.scanlines::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(34, 211, 238, 0.05) 0px,
+    rgba(34, 211, 238, 0.05) 1px,
+    transparent 1px,
+    transparent 4px
+  );
+  mix-blend-mode: screen;
+}
+
+/* Kedip lembut kursor terminal. Tidak ada kilatan cepat. */
+@keyframes caret {
+  0%, 45% { opacity: 1; }
+  55%, 100% { opacity: 0; }
+}
+.caret { animation: caret 1.1s steps(1, end) infinite; }
+
+@keyframes sweep {
+  from { transform: translateY(-110%); }
+  to { transform: translateY(410%); }
+}
+.sweep { animation: sweep 3.6s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+
+@keyframes dash-flow {
+  to { stroke-dashoffset: -24; }
+}
+.dash-flow { animation: dash-flow 1.2s linear infinite; }
+
+/* --- Reduced motion: hentikan semua animasi dekoratif -------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .sweep, .caret, .dash-flow { animation: none !important; opacity: 1; }
+  body { background-attachment: scroll; }
+}
+
+/* --- Scrollbar ----------------------------------------------------------- */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--color-void-2); }
+::-webkit-scrollbar-thumb {
+  background: var(--color-edge-bright);
+  border-radius: 6px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--color-violet-deep); }
+
+/* Menyembunyikan autofill biru bawaan browser pada panel gelap. */
+input:-webkit-autofill,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--color-ink);
+  -webkit-box-shadow: 0 0 0 1000px var(--color-panel-2) inset;
+}

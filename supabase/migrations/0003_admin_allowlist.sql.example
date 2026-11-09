@@ -1,0 +1,17 @@
+-- =============================================================================
+-- CONTOH: menambahkan admin ke allowlist.
+--
+-- Jalankan MANUAL di Supabase SQL Editor setelah akun dibuat lewat
+-- Authentication -> Users -> Add user. Tidak ada signup publik dan tidak ada
+-- jalur dari browser untuk menambah diri sendiri ke tabel ini.
+--
+-- Ganti alamat email di bawah, lalu jalankan.
+-- =============================================================================
+insert into public.admin_users (user_id, note)
+select id, 'penyelenggara utama'
+from auth.users
+where email = 'ganti-dengan-email-admin@example.com'
+on conflict (user_id) do nothing;
+
+-- Verifikasi:
+-- select au.user_id, u.email from public.admin_users au join auth.users u on u.id = au.user_id;
