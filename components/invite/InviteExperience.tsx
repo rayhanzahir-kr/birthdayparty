@@ -25,10 +25,17 @@ export function InviteExperience({
   token,
   invitation,
   demo = false,
+  showBoot = true,
 }: {
   token: string;
   invitation: InvitationView;
   demo?: boolean;
+  /**
+   * Menekan boot sequence milik undangan. Dipakai ketika PROJECT R sudah
+   * menjalankan boot terminalnya sendiri, supaya tamu tidak melihat dua intro.
+   * Murni presentasional — tidak menyentuh RSVP.
+   */
+  showBoot?: boolean;
 }) {
   const [saved, setSaved] = useState<SavedRsvp | null>(invitation.rsvp);
   const [mergeVisible, setMergeVisible] = useState(false);
@@ -53,7 +60,7 @@ export function InviteExperience({
 
   return (
     <>
-      {demo ? null : <BootSequence />}
+      {demo || !showBoot ? null : <BootSequence />}
       <MergeFlash show={mergeVisible} onDone={() => setMergeVisible(false)} />
 
       <div className="mx-auto w-full max-w-2xl px-4 py-8 sm:px-6 sm:py-12">

@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { InviteExperience } from "@/components/invite/InviteExperience";
+import { MissionGate } from "@/components/mission/MissionGate";
+import { deriveDisplayId } from "@/lib/mission/display-id";
 import { loadInvitation } from "@/lib/invitations";
 import { isTokenShapeValid } from "@/lib/tokens";
 import { getClientIp } from "@/lib/http";
@@ -65,9 +67,18 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
   // tidak mengungkap apakah seorang tamu ada atau tidak.
   if (!invitation) redirect("/access-denied");
 
+  // ID tampilan diturunkan di SERVER; UUID internal tamu tidak pernah ke browser.
+  const displayId = deriveDisplayId(invitation.guest.id);
+
   return (
     <main>
-      <InviteExperience token={token} invitation={invitation} />
+      <MissionGate
+        guestName={invitation.guest.name}
+        displayId={displayId}
+        eventTitle={invitation.event.title}
+      >
+        <InviteExperience token={token} invitation={invitation} showBoot={false} />
+      </MissionGate>
     </main>
   );
 }
