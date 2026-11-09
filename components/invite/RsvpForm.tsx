@@ -129,9 +129,9 @@ export function RsvpForm({ token, saved, deadlinePassed, onSaved, demo = false }
     if (demo) {
       // Demo tidak pernah menyentuh endpoint produksi dan tidak menulis data.
       await new Promise((resolve) => setTimeout(resolve, 650));
-      if (status === "attending" && !/^\d{2}([.-])\d{2}\1\d{4}$/.test(password.trim())) {
+      if (status === "attending" && !/^(\d{8}|\d{2}([.-])\d{2}\2\d{4})$/.test(password.trim())) {
         setPhase("error");
-        setPasswordError("Demo mode: the format must be DD.MM.YYYY or DD-MM-YYYY.");
+        setPasswordError("Demo mode: the format must be DDMMYYYY.");
         return;
       }
       setPhase("saved");
@@ -279,7 +279,7 @@ export function RsvpForm({ token, saved, deadlinePassed, onSaved, demo = false }
                       autoCorrect="off"
                       spellCheck={false}
                       maxLength={32}
-                      placeholder="DD.MM.YYYY"
+                      placeholder="DDMMYYYY"
                       aria-describedby={cx(
                         `${baseId}-password-hint`,
                         passwordError ? `${baseId}-password-error` : undefined,

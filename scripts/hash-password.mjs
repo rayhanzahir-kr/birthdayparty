@@ -16,6 +16,7 @@ import { createHash } from "node:crypto";
 import { createInterface } from "node:readline";
 import process from "node:process";
 
+const PLAIN = /^(\d{2})(\d{2})(\d{4})$/;
 const DOT = /^(\d{2})\.(\d{2})\.(\d{4})$/;
 const DASH = /^(\d{2})-(\d{2})-(\d{4})$/;
 
@@ -23,7 +24,7 @@ const DASH = /^(\d{2})-(\d{2})-(\d{4})$/;
 function canonicalize(raw) {
   if (typeof raw !== "string" || raw.length > 32) return null;
   const trimmed = raw.trim();
-  const match = DOT.exec(trimmed) ?? DASH.exec(trimmed);
+  const match = PLAIN.exec(trimmed) ?? DOT.exec(trimmed) ?? DASH.exec(trimmed);
   if (!match) return null;
   const [, dd, mm, yyyy] = match;
   const day = Number(dd);
@@ -94,15 +95,15 @@ async function main() {
   }
 
   const raw = process.stdin.isTTY
-    ? await readHiddenFromTty("Enter the birthday (DD.MM.YYYY or DD-MM-YYYY): ")
+    ? await readHiddenFromTty("Enter the birthday (DDMMYYYY): ")
     : await readFromStdinPipe();
 
   const canonical = canonicalize(raw);
   if (canonical === null) {
     process.stderr.write(
       "\nFormat not accepted.\n" +
-        "Use two-digit day, two-digit month, four-digit year, with dot OR hyphen\n" +
-        "separators used consistently. Shape: DD.MM.YYYY / DD-MM-YYYY.\n" +
+        "Use two-digit day, two-digit month, four-digit year, with no separator or\n" +
+        "with dot OR hyphen used consistently. Shape: DDMMYYYY / DD.MM.YYYY.\n" +
         "Mixed separators and dates that do not exist are rejected.\n",
     );
     process.exit(1);

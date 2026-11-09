@@ -9,12 +9,17 @@ import { hashCanonicalPassword, verifyInvitePassword } from "../lib/password";
  * di berkas tes (bukan di source aplikasi, bundle browser, atau HTML) supaya
  * aturannya benar-benar terverifikasi.
  */
+const PLAIN_FORM = "10112004";
 const DOT_FORM = "10.11.2004";
 const DASH_FORM = "10-11-2004";
 const CANONICAL = "2004-11-10";
 const CORRECT_HASH = createHash("sha256").update(CANONICAL, "utf8").digest("hex");
 
 describe("canonicalizeInvitePassword", () => {
+  it("menerima format DDMMYYYY tanpa pemisah (format utama)", () => {
+    assert.equal(canonicalizeInvitePassword(PLAIN_FORM), CANONICAL);
+  });
+
   it("menerima format titik dan menormalkan ke YYYY-MM-DD", () => {
     assert.equal(canonicalizeInvitePassword(DOT_FORM), CANONICAL);
   });
@@ -24,6 +29,7 @@ describe("canonicalizeInvitePassword", () => {
   });
 
   it("mengabaikan spasi di awal dan akhir", () => {
+    assert.equal(canonicalizeInvitePassword(`  ${PLAIN_FORM}  `), CANONICAL);
     assert.equal(canonicalizeInvitePassword(`  ${DOT_FORM}  `), CANONICAL);
     assert.equal(canonicalizeInvitePassword(`\t${DASH_FORM}\n`), CANONICAL);
   });
@@ -36,6 +42,9 @@ describe("canonicalizeInvitePassword", () => {
   it("menolak format lain", () => {
     for (const value of [
       "2004-11-10",
+      "20041110",
+      "1011204",
+      "101120041",
       "10/11/2004",
       "1.1.2004",
       "1.11.2004",
@@ -74,12 +83,14 @@ describe("canonicalizeInvitePassword", () => {
 });
 
 describe("verifyInvitePassword", () => {
-  it("menerima kedua format yang benar", () => {
+  it("menerima ketiga format yang benar", () => {
+    assert.deepEqual(verifyInvitePassword(PLAIN_FORM, CORRECT_HASH), { ok: true });
     assert.deepEqual(verifyInvitePassword(DOT_FORM, CORRECT_HASH), { ok: true });
     assert.deepEqual(verifyInvitePassword(DASH_FORM, CORRECT_HASH), { ok: true });
   });
 
   it("menolak password yang salah nilainya", () => {
+    assert.equal(verifyInvitePassword("11102004", CORRECT_HASH).ok, false);
     const result = verifyInvitePassword("11.10.2004", CORRECT_HASH);
     assert.equal(result.ok, false);
     assert.equal(result.ok === false && result.reason, "mismatch");
@@ -118,9 +129,13 @@ describe("hashCanonicalPassword", () => {
     assert.equal(hashCanonicalPassword(CANONICAL), CORRECT_HASH);
   });
 
-  it("kedua format menghasilkan hash identik setelah normalisasi", () => {
-    const a = hashCanonicalPassword(canonicalizeInvitePassword(DOT_FORM)!);
-    const b = hashCanonicalPassword(canonicalizeInvitePassword(DASH_FORM)!);
+  it("ketiga format menghasilkan hash identik setelah normalisasi", () => {
+    const a = hashCanonicalPassword(canonicalizeInvitePassword(PLAIN_FORM)!);
+    const b = hashCanonicalPassword(canonicalizeInvitePassword(DOT_FORM)!);
+    const c = hashCanonicalPassword(canonicalizeInvitePassword(DASH_FORM)!);
     assert.equal(a, b);
+    assert.equal(b, c);
+    // Hash tidak berubah, jadi INVITE_PASSWORD_HASH lama tetap berlaku.
+    assert.equal(a, CORRECT_HASH);
   });
 });

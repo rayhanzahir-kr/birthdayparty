@@ -10,24 +10,35 @@
  * Nilai input tamu TIDAK pernah disimpan atau di-log, termasuk tebakan salah.
  */
 
-/** Jawaban kanonis, format DD.MM.YYYY. */
-export const CANONICAL_BIRTHDAY = "10.11.2004";
+/** Jawaban kanonis, format DDMMYYYY (delapan digit, tanpa pemisah). */
+export const CANONICAL_BIRTHDAY = "10112004";
+
+/** Label format yang ditampilkan ke tamu. */
+export const BIRTHDAY_FORMAT_LABEL = "DDMMYYYY";
 
 /** Batas panjang input (PRD FR-04a). */
 export const BIRTHDAY_MAX_LENGTH = 32;
 
 /**
- * Alias yang HANYA diterima bila acceptBirthdayVariants diaktifkan eksplisit.
- * Keduanya dinormalisasi ke bentuk kanonis. Kita tidak pernah membuang semua
- * karakter non-digit secara umum — hanya dua pola persis ini yang dikenali.
+ * Bentuk bertanda pemisah yang tetap DITERIMA.
+ *
+ * Penyimpangan sadar dari PRD §FR-04a, atas permintaan pemilik produk: format
+ * utama kini DDMMYYYY, dan ketiga alias di bawah diterima secara DEFAULT supaya
+ * tamu tidak pernah tertahan hanya karena menambahkan titik atau garis.
+ * Tetap tidak ada pembuangan karakter non-digit secara umum — hanya pola persis
+ * ini yang dikenali.
  */
-const VARIANT_ALIASES: Record<string, string> = {
+const ACCEPTED_ALIASES: Record<string, string> = {
+  "10.11.2004": CANONICAL_BIRTHDAY,
+  "10-11-2004": CANONICAL_BIRTHDAY,
   "10/11/2004": CANONICAL_BIRTHDAY,
-  "10112004": CANONICAL_BIRTHDAY,
 };
 
 export interface BirthdayCheckOptions {
-  /** Default false: mode strict, hanya menerima bentuk kanonis. */
+  /**
+   * Dipertahankan demi kompatibilitas pemanggil lama. Alias bertanda pemisah
+   * kini selalu diterima, jadi opsi ini tidak lagi mengubah perilaku.
+   */
   acceptBirthdayVariants?: boolean;
 }
 
@@ -40,13 +51,13 @@ export type BirthdayVerdict =
 /**
  * Memeriksa jawaban Level 3.
  *
- * Trim whitespace di kedua ujung. Mode strict menerima hanya `10.11.2004`.
- * Mode variant menambahkan tepat dua alias. Semua selain itu salah, termasuk
- * tanggal terbalik, tahun dua digit, format ISO, dan teks tambahan.
+ * Trim whitespace di kedua ujung. Menerima bentuk kanonis `10112004` serta tiga
+ * alias bertanda pemisah. Semua selain itu salah, termasuk tanggal terbalik,
+ * tahun dua digit, format ISO, dan teks tambahan.
  */
 export function checkBirthdayAnswer(
   raw: unknown,
-  options: BirthdayCheckOptions = {},
+  _options: BirthdayCheckOptions = {},
 ): BirthdayVerdict {
   if (typeof raw !== "string") return { kind: "incorrect" };
   if (raw.length > BIRTHDAY_MAX_LENGTH) return { kind: "incorrect" };
@@ -58,10 +69,8 @@ export function checkBirthdayAnswer(
     return { kind: "correct", normalized: CANONICAL_BIRTHDAY };
   }
 
-  if (options.acceptBirthdayVariants === true) {
-    const alias = VARIANT_ALIASES[trimmed];
-    if (alias) return { kind: "correct", normalized: alias };
-  }
+  const alias = ACCEPTED_ALIASES[trimmed];
+  if (alias) return { kind: "correct", normalized: alias };
 
   return { kind: "incorrect" };
 }

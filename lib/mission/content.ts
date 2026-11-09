@@ -81,10 +81,10 @@ export const LEVEL_3: BirthdayChallengeSpec = {
     "> SECURITY CHECKPOINT 03",
     "> Identity verification required.",
     "> Enter the date the legend was born.",
-    "> Format: DD.MM.YYYY",
+    "> Format: DDMMYYYY",
   ],
   hint: "The day the world was blessed with my existence",
-  successHeading: "ACCESS GRANTED — 10.11.2004 VERIFIED",
+  successHeading: "ACCESS GRANTED — 10112004 VERIFIED",
   success: "Congratulations. You officially know more about me than I expected.",
 };
 

@@ -75,7 +75,7 @@ npm run hash-password  # generate INVITE_PASSWORD_HASH
 
 ```bash
 npm run hash-password
-# Enter the birthday (DD.MM.YYYY or DD-MM-YYYY): [input is hidden]
+# Enter the birthday (DDMMYYYY): [input is hidden]
 # INVITE_PASSWORD_HASH=<64 hex characters>
 ```
 
@@ -200,11 +200,13 @@ message as a wrong password.
 - The invitation is opened by the **personal token**, not by a password.
 - The password is only a key when **saving** an `attending` answer. `maybe` and `declined` never
   require it.
-- Accepted: two-digit day, two-digit month, four-digit year, with dot **or** hyphen separators used
-  **consistently** (`DD.MM.YYYY` / `DD-MM-YYYY`), after trimming outer whitespace. The server
-  normalises to `YYYY-MM-DD` before comparing hashes.
-- Rejected: mixed separators, other formats, single digits, dates that do not exist, and wrong
-  values.
+- Accepted: two-digit day, two-digit month, four-digit year — with **no separator** (`DDMMYYYY`,
+  the format shown to guests), or with dot **or** hyphen separators used **consistently**
+  (`DD.MM.YYYY` / `DD-MM-YYYY`), after trimming outer whitespace. The server normalises to
+  `YYYY-MM-DD` before comparing hashes, so the canonical form — and therefore an already configured
+  `INVITE_PASSWORD_HASH` — is unchanged.
+- Rejected: mixed separators, other formats, single digits, wrong digit counts, dates that do not
+  exist, and wrong values.
 - Verification happens **entirely on the server**, before the write. The active token, the deadline,
   the password and the payload must all pass first — no `attending` is ever saved first and checked
   afterwards.
@@ -263,8 +265,8 @@ Once the migrations and the admin account are ready:
 | 4 | Add a guest | Link appears once and can be copied |
 | 5 | Open the link | Name + details + form appear, no password |
 | 6 | Choose **Maybe**, save | Saved without a key |
-| 7 | Choose **Attending** + `DD.MM.YYYY` (dot form) | Saved, merge plays, pass appears |
-| 8 | Repeat with the hyphen form | Also accepted |
+| 7 | Choose **Attending** + `DDMMYYYY` | Saved, merge plays, pass appears |
+| 8 | Repeat with the dot and hyphen forms | Also accepted |
 | 9 | **Attending** + mixed separators | Rejected; previous response intact |
 | 10 | **Attending** + wrong / empty password | Rejected; no new pass; input preserved |
 | 11 | Refresh after a successful attending | Invitation + pass shown without a password |
@@ -290,7 +292,7 @@ curl -i -X POST http://localhost:3000/api/rsvp \
 # forbidden fields -> must be rejected
 curl -i -X POST http://localhost:3000/api/rsvp \
   -H 'Content-Type: application/json' -H 'Origin: http://localhost:3000' \
-  -d '{"token":"<TOKEN>","status":"attending","guest_count":5,"password":"DD.MM.YYYY"}'
+  -d '{"token":"<TOKEN>","status":"attending","guest_count":5,"password":"DDMMYYYY"}'
 ```
 
 ---

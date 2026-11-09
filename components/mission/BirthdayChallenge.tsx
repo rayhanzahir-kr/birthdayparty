@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
+  BIRTHDAY_FORMAT_LABEL,
   BIRTHDAY_MAX_LENGTH,
   EXTRA_HINT,
   checkBirthdayAnswer,
@@ -134,13 +135,13 @@ export function BirthdayChallenge({
               setValue(event.target.value);
               setFeedback(null);
             }}
-            placeholder="DD.MM.YYYY"
+            placeholder={BIRTHDAY_FORMAT_LABEL}
             aria-describedby="pr-birthday-format pr-birthday-feedback"
             aria-invalid={feedback?.kind === "denied" ? true : undefined}
             className="mt-2 min-h-11 w-full rounded-md border border-[color:var(--pr-muted)]/35 bg-[color:var(--pr-bg)] px-4 py-2.5 font-mono tracking-wider text-[color:var(--pr-text)] placeholder:text-[color:var(--pr-muted)]/60 focus:border-[color:var(--pr-accent)] focus:outline-none"
           />
           <p id="pr-birthday-format" className="mt-2 font-mono text-[0.6875rem] text-[color:var(--pr-muted)]">
-            Format: DD.MM.YYYY · press Enter to submit
+            Format: {BIRTHDAY_FORMAT_LABEL} · press Enter to submit
           </p>
 
           <div id="pr-birthday-feedback" aria-live="polite" className="mt-3 min-h-12">
@@ -150,7 +151,7 @@ export function BirthdayChallenge({
               </p>
             ) : feedback?.kind === "format" ? (
               <p className="font-mono text-[0.75rem] text-[color:var(--pr-muted)]">
-                Enter a date in DD.MM.YYYY format.
+                Enter the date as {BIRTHDAY_FORMAT_LABEL}.
               </p>
             ) : null}
 

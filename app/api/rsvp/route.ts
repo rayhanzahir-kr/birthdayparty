@@ -118,7 +118,7 @@ export async function POST(request: Request) {
       // apakah formatnya sudah benar. Respons lama tidak diubah sama sekali.
       logServerEvent("invite_password_rejected", { reason: check.reason });
       return errorResponse(
-        "That key doesn't match. Enter the host's birthday as DD.MM.YYYY or DD-MM-YYYY.",
+        "That key doesn't match. Enter the host's birthday as DDMMYYYY.",
         403,
         { field: "password", remaining: pairLimit.remaining },
       );

@@ -25,7 +25,8 @@ runtime message, not a build failure.
 - **Tokens** — 32 bytes of entropy, 43-character base64url with no padding, 2000 tokens without a
   collision, SHA-256 matching the standard implementation, hashes that do not contain the token,
   rejection of malformed shapes, and `"demo"` rejected as a token.
-- **Key to join** — both formats (`DD.MM.YYYY`, `DD-MM-YYYY`) normalise to the same canonical value;
+- **Key to join** — all three formats (`DDMMYYYY`, `DD.MM.YYYY`, `DD-MM-YYYY`) normalise to the
+  same canonical value, so an existing `INVITE_PASSWORD_HASH` keeps working;
   outer whitespace trimmed; mixed separators rejected; other formats rejected; impossible dates
   (`31.02`, `29.02.2003`, `00.11`, month 13) rejected; valid leap days accepted; non-string and
   oversized input rejected; `not_configured` when the hash is missing or malformed; hash comparison
