@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAllowedOrigins } from "./env";
+import { evaluateOrigin } from "./origin";
 
 const PRIVATE_CACHE = "private, no-store, max-age=0, must-revalidate";
 
@@ -20,45 +21,21 @@ export function errorResponse(message: string, status: number, extra?: Record<st
 }
 
 /**
- * Proteksi CSRF untuk mutasi: Origin (atau Sec-Fetch-Site) harus same-origin.
- * CORS sengaja tidak dipakai sebagai perlindungan — browser mengizinkan
- * simple request lintas situs tanpa preflight.
+ * Proteksi CSRF untuk mutasi. Logika keputusannya ada di lib/origin.ts dan
+ * diuji terpisah; di sini hanya pengambilan header dan konfigurasi.
  */
 export function verifySameOrigin(request: Request): boolean {
-  const fetchSite = request.headers.get("sec-fetch-site");
-  if (fetchSite && fetchSite !== "same-origin" && fetchSite !== "none") {
-    return false;
-  }
-
-  const origin = request.headers.get("origin");
-  const allowed = getAllowedOrigins();
-
-  if (origin) {
-    return allowed.some((candidate) => sameOrigin(candidate, origin));
-  }
-
-  // Tanpa header Origin, jatuh ke Referer bila ada; selain itu andalkan
-  // Sec-Fetch-Site yang sudah lolos di atas.
-  const referer = request.headers.get("referer");
-  if (referer) {
-    try {
-      const refOrigin = new URL(referer).origin;
-      return allowed.some((candidate) => sameOrigin(candidate, refOrigin));
-    } catch {
-      return false;
-    }
-  }
-
-  return Boolean(fetchSite);
+  return evaluateOrigin(
+    {
+      secFetchSite: request.headers.get("sec-fetch-site"),
+      origin: request.headers.get("origin"),
+      referer: request.headers.get("referer"),
+    },
+    getAllowedOrigins(),
+  ).allowed;
 }
 
-function sameOrigin(a: string, b: string): boolean {
-  try {
-    return new URL(a).origin === new URL(b).origin;
-  } catch {
-    return false;
-  }
-}
+
 
 /**
  * IP klien dari header platform tepercaya.

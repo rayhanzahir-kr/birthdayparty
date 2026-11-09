@@ -1,9 +1,14 @@
 /**
- * Akses environment terpusat.
+ * Akses environment terpusat — SEMUANYA dibaca di server.
  *
- * Nilai server-only (service role key, INVITE_PASSWORD_HASH) hanya dibaca dari
- * modul yang berjalan di server. Tidak ada nilai rahasia yang memakai prefix
- * NEXT_PUBLIC, sehingga tidak bisa ikut ke bundle browser.
+ * Tidak ada satu pun variabel di sini yang perlu prefix NEXT_PUBLIC: browser
+ * tidak pernah berbicara langsung ke Supabase (login admin lewat route server
+ * /api/admin/login), sehingga URL dan publishable key tidak perlu ikut ke
+ * bundle. Nama tanpa prefix lebih aman karena Next.js tidak akan menyuntikkan
+ * nilainya ke JavaScript sisi klien walau nanti ada yang keliru mengimpornya.
+ *
+ * Nama berprefix NEXT_PUBLIC_ masih dibaca sebagai cadangan agar konfigurasi
+ * lama tetap jalan tanpa perubahan.
  */
 
 export interface PublicEnv {
@@ -21,9 +26,12 @@ function read(name: string): string | undefined {
 
 /** Konfigurasi publik Supabase; `null` berarti aplikasi belum dikonfigurasi. */
 export function getPublicEnv(): PublicEnv | null {
-  const supabaseUrl = read("NEXT_PUBLIC_SUPABASE_URL");
+  const supabaseUrl = read("SUPABASE_URL") ?? read("NEXT_PUBLIC_SUPABASE_URL");
   const supabasePublishableKey =
-    read("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY") ?? read("NEXT_PUBLIC_SUPABASE_ANON_KEY");
+    read("SUPABASE_PUBLISHABLE_KEY") ??
+    read("SUPABASE_ANON_KEY") ??
+    read("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY") ??
+    read("NEXT_PUBLIC_SUPABASE_ANON_KEY");
   if (!supabaseUrl || !supabasePublishableKey) return null;
   return { supabaseUrl, supabasePublishableKey, siteUrl: getSiteUrl() };
 }
@@ -48,7 +56,7 @@ export function isInvitePasswordConfigured(): boolean {
 }
 
 export function getSiteUrl(): string {
-  const explicit = read("NEXT_PUBLIC_SITE_URL");
+  const explicit = read("SITE_URL") ?? read("NEXT_PUBLIC_SITE_URL");
   if (explicit) return explicit.replace(/\/+$/, "");
   const vercel = read("VERCEL_PROJECT_PRODUCTION_URL") ?? read("VERCEL_URL");
   if (vercel) return `https://${vercel.replace(/\/+$/, "")}`;

@@ -55,17 +55,22 @@ npm run hash-password  # buat INVITE_PASSWORD_HASH
 
 | Nama | Scope | Keterangan |
 |---|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | browser | URL proyek Supabase |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | browser | publishable/anon key; dibatasi RLS |
-| `SUPABASE_SERVICE_ROLE_KEY` | **server saja** | melewati RLS; jangan pernah diberi prefix `NEXT_PUBLIC` |
-| `NEXT_PUBLIC_SITE_URL` | browser | basis link undangan **dan** allowlist origin untuk proteksi CSRF |
+| `SUPABASE_URL` | server | URL proyek Supabase |
+| `SUPABASE_PUBLISHABLE_KEY` | server | publishable/anon key; dibatasi RLS |
+| `SUPABASE_SERVICE_ROLE_KEY` | server | melewati RLS; jangan pernah diberi prefix `NEXT_PUBLIC` |
+| `SITE_URL` | server | basis link undangan yang dibagikan ke tamu |
 | `INVITE_PASSWORD_HASH` | **server saja** | SHA-256 kunci "ikut acara" |
 | `ADDITIONAL_ALLOWED_ORIGINS` | server, opsional | origin tambahan yang boleh mengirim mutasi, dipisah koma |
 | `TRUSTED_IP_HEADER` | server, opsional | hanya bila di-host di belakang proxy selain Vercel |
 
-> `NEXT_PUBLIC_SITE_URL` wajib cocok dengan origin yang benar-benar dipakai. Bila tidak cocok,
-> semua request mutasi akan ditolak dengan HTTP 403 "origin tidak dikenal" — ini memang perilaku
-> yang diinginkan.
+> **Tidak ada variabel berprefix `NEXT_PUBLIC_`.** Browser tidak pernah menghubungi Supabase
+> secara langsung — login admin berjalan lewat route server — sehingga URL dan publishable key
+> tidak perlu ikut ke bundle browser. Nama lama berprefix `NEXT_PUBLIC_` masih dibaca sebagai
+> cadangan agar konfigurasi lama tetap jalan.
+>
+> `SITE_URL` menentukan domain pada link undangan yang kamu bagikan. Kalau keliru, aplikasi tetap
+> berfungsi (proteksi CSRF memakai `Sec-Fetch-Site`), tetapi link yang di-generate akan menunjuk
+> domain yang salah — jadi tetap isi dengan benar.
 
 ### Membuat `INVITE_PASSWORD_HASH`
 
@@ -87,8 +92,8 @@ Salin baris hasilnya ke `.env.local`, dan ke Environment Variables Vercel sebaga
 
 1. Buat proyek baru di [supabase.com/dashboard](https://supabase.com/dashboard).
 2. Buka **Project Settings → API**, lalu salin:
-   - *Project URL* → `NEXT_PUBLIC_SUPABASE_URL`
-   - *publishable* / *anon* key → `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+   - *Project URL* → `SUPABASE_URL`
+   - *publishable* / *anon* key → `SUPABASE_PUBLISHABLE_KEY`
    - *service_role* / *secret* key → `SUPABASE_SERVICE_ROLE_KEY`
 
 ---
@@ -286,13 +291,13 @@ curl -i -X POST http://localhost:3000/api/rsvp \
 1. Push repo ke GitHub/GitLab.
 2. Di Vercel: **Add New → Project**, pilih repo. Framework Next.js terdeteksi otomatis.
 3. Tambahkan Environment Variables (Production **dan** Preview):
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
-   - `SUPABASE_SERVICE_ROLE_KEY` (server saja)
-   - `INVITE_PASSWORD_HASH` (server saja)
-   - `NEXT_PUBLIC_SITE_URL` = `https://<nama-proyek>.vercel.app`
-4. Deploy, lalu **perbarui `NEXT_PUBLIC_SITE_URL`** ke domain final dan deploy ulang supaya link
-   undangan dan allowlist origin benar.
+   - `SUPABASE_URL`
+   - `SUPABASE_PUBLISHABLE_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY`
+   - `INVITE_PASSWORD_HASH`
+   - `SITE_URL` = `https://<nama-proyek>.vercel.app`
+4. Deploy, lalu **perbarui `SITE_URL`** ke domain final dan deploy ulang supaya link undangan
+   menunjuk domain yang benar.
 5. Untuk Preview deployment, tambahkan URL preview ke `ADDITIONAL_ALLOWED_ORIGINS` bila perlu.
 
 Subdomain `*.vercel.app` gratis sudah cukup; tidak perlu membeli domain. Ketersediaan nama subdomain
@@ -346,7 +351,7 @@ docs/                          PRD.md · VERIFICATION.md
 | Gejala | Penyebab & solusi |
 |---|---|
 | Halaman menampilkan "Konfigurasi Supabase diperlukan" | Env Supabase belum lengkap. Isi ketiga nilainya di `.env.local`, lalu restart dev server. |
-| HTTP 403 "origin tidak dikenal" saat menyimpan | `NEXT_PUBLIC_SITE_URL` tidak cocok dengan origin browser. Samakan, atau tambahkan ke `ADDITIONAL_ALLOWED_ORIGINS`. |
+| HTTP 403 "origin tidak dikenal" saat menyimpan | Request datang lintas situs, atau browser tidak mengirim `Sec-Fetch-Site`. Untuk browser lama, samakan `SITE_URL` dengan origin yang dipakai atau tambahkan ke `ADDITIONAL_ALLOWED_ORIGINS`. |
 | "Kunci acara belum disetel di server" (503) | `INVITE_PASSWORD_HASH` kosong/tidak valid. Jalankan `npm run hash-password`. |
 | Kunci yang benar tetap ditolak | Hash dibuat dari tanggal berbeda, atau separator campuran. Buat ulang hash dan perhatikan formatnya. |
 | Login admin selalu gagal | Akun belum ada di `admin_users`. Jalankan SQL allowlist di bagian 6. |
