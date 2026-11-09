@@ -13,9 +13,12 @@ next-env.d.ts
 
 # secrets / env
 .env
+.env.*
 .env.local
 .env.*.local
 .env.production
+*.bak
+*.bak-*
 
 # misc
 .DS_Store
