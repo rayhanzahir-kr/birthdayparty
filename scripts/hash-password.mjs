@@ -19,12 +19,14 @@ import process from "node:process";
 const PLAIN = /^(\d{2})(\d{2})(\d{4})$/;
 const DOT = /^(\d{2})\.(\d{2})\.(\d{4})$/;
 const DASH = /^(\d{2})-(\d{2})-(\d{4})$/;
+const SLASH = /^(\d{2})\/(\d{2})\/(\d{4})$/;
 
 /** Must stay identical to canonicalizeInvitePassword() in lib/password-format.ts. */
 function canonicalize(raw) {
   if (typeof raw !== "string" || raw.length > 32) return null;
   const trimmed = raw.trim();
-  const match = PLAIN.exec(trimmed) ?? DOT.exec(trimmed) ?? DASH.exec(trimmed);
+  const match =
+    PLAIN.exec(trimmed) ?? DOT.exec(trimmed) ?? DASH.exec(trimmed) ?? SLASH.exec(trimmed);
   if (!match) return null;
   const [, dd, mm, yyyy] = match;
   const day = Number(dd);
@@ -103,7 +105,7 @@ async function main() {
     process.stderr.write(
       "\nFormat not accepted.\n" +
         "Use two-digit day, two-digit month, four-digit year, with no separator or\n" +
-        "with dot OR hyphen used consistently. Shape: DDMMYYYY / DD.MM.YYYY.\n" +
+        "with dot, hyphen OR slash used consistently. Shape: DDMMYYYY / DD.MM.YYYY.\n" +
         "Mixed separators and dates that do not exist are rejected.\n",
     );
     process.exit(1);
