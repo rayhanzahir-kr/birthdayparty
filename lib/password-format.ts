@@ -23,11 +23,15 @@ export const PASSWORD_MAX_RAW_LENGTH = 32;
  *
  * Bentuk bertanda pemisah tetap diterima agar petunjuk lama yang sudah beredar
  * tidak rusak. Separator tetap harus KONSISTEN: titik semua atau tanda hubung
- * semua. Campuran tetap ditolak.
+ * semua, atau garis miring semua. Campuran tetap ditolak.
+ *
+ * Daftar ini sengaja PERSIS SAMA dengan yang diterima Level 3 pada game, supaya
+ * tamu tidak pernah belajar satu format lalu ditolak di form RSVP.
  */
 const PLAIN_PATTERN = /^(\d{2})(\d{2})(\d{4})$/;
 const DOT_PATTERN = /^(\d{2})\.(\d{2})\.(\d{4})$/;
 const DASH_PATTERN = /^(\d{2})-(\d{2})-(\d{4})$/;
+const SLASH_PATTERN = /^(\d{2})\/(\d{2})\/(\d{4})$/;
 
 function isRealCalendarDate(day: number, month: number, year: number): boolean {
   if (year < 1900 || year > 2100) return false;
@@ -47,7 +51,7 @@ function isRealCalendarDate(day: number, month: number, year: number): boolean {
  *
  * Bentuk kanonis TIDAK berubah, sehingga INVITE_PASSWORD_HASH yang sudah
  * dikonfigurasi tetap berlaku dan tidak perlu dibuat ulang.
- * Ditolak: separator campuran (10.11-2004), format lain (2004-11-10, 10/11/2004),
+ * Ditolak: separator campuran (10.11-2004), format lain (2004-11-10, 20041110),
  * satu digit (1.1.2004), spasi di tengah, dan tanggal kalender tidak valid.
  *
  * @returns bentuk kanonis, atau null bila input tidak memenuhi aturan.
@@ -60,7 +64,10 @@ export function canonicalizeInvitePassword(raw: unknown): string | null {
   if (trimmed.length === 0) return null;
 
   const match =
-    PLAIN_PATTERN.exec(trimmed) ?? DOT_PATTERN.exec(trimmed) ?? DASH_PATTERN.exec(trimmed);
+    PLAIN_PATTERN.exec(trimmed) ??
+    DOT_PATTERN.exec(trimmed) ??
+    DASH_PATTERN.exec(trimmed) ??
+    SLASH_PATTERN.exec(trimmed);
   if (!match) return null;
 
   const [, dd, mm, yyyy] = match as unknown as [string, string, string, string];

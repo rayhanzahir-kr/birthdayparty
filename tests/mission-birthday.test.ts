@@ -88,9 +88,19 @@ describe("Level 3 — konsistensi dengan kunci RSVP", () => {
   it("format yang diajarkan game juga diterima kunci RSVP", async () => {
     // Jebakan yang dicegah: tamu belajar satu format di game lalu ditolak form.
     const { canonicalizeInvitePassword } = await import("../lib/password-format");
-    for (const raw of ["10112004", "10.11.2004", "10-11-2004"]) {
+    for (const raw of ["10112004", "10.11.2004", "10-11-2004", "10/11/2004"]) {
       assert.equal(checkBirthdayAnswer(raw).kind, "correct", `game: ${raw}`);
       assert.equal(canonicalizeInvitePassword(raw), "2004-11-10", `rsvp: ${raw}`);
+    }
+  });
+
+  it("yang ditolak game juga ditolak kunci RSVP", async () => {
+    const { canonicalizeInvitePassword } = await import("../lib/password-format");
+    for (const raw of ["10.11-2004", "20041110", "1011204", "101120041", "11102004"]) {
+      const gameOk = checkBirthdayAnswer(raw).kind === "correct";
+      const rsvpOk = canonicalizeInvitePassword(raw) === "2004-11-10";
+      assert.equal(gameOk, false, `game seharusnya menolak: ${raw}`);
+      assert.equal(rsvpOk, false, `rsvp seharusnya menolak: ${raw}`);
     }
   });
 });
