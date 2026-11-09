@@ -32,20 +32,20 @@ const OPTIONS: Array<{
   {
     value: "attending",
     icon: Check,
-    blurb: "Aku datang. Perlu kunci acara.",
+    blurb: "I'm coming. Needs the event key.",
     accent: "data-[selected=true]:border-ok data-[selected=true]:bg-ok/12 data-[selected=true]:text-ok",
   },
   {
     value: "maybe",
     icon: CircleHelp,
-    blurb: "Masih belum bisa memastikan.",
+    blurb: "Still can't say for sure.",
     accent:
       "data-[selected=true]:border-warn data-[selected=true]:bg-warn/12 data-[selected=true]:text-warn",
   },
   {
     value: "declined",
     icon: X,
-    blurb: "Kali ini tidak bisa ikut.",
+    blurb: "Can't join this time.",
     accent:
       "data-[selected=true]:border-bad data-[selected=true]:bg-bad/12 data-[selected=true]:text-bad",
   },
@@ -110,16 +110,16 @@ export function RsvpForm({ token, saved, deadlinePassed, onSaved, demo = false }
     setPasswordError(null);
 
     if (status === null) {
-      setFormError("Pilih salah satu jawaban dulu.");
+      setFormError("Pick an answer first.");
       return;
     }
     if (message.length > MESSAGE_MAX_LENGTH) {
-      setFormError(`Pesan maksimal ${MESSAGE_MAX_LENGTH} karakter.`);
+      setFormError(`Message can be at most ${MESSAGE_MAX_LENGTH} characters.`);
       return;
     }
     // Pemeriksaan kosong di client hanya untuk UX. Server tetap yang memutuskan.
     if (status === "attending" && password.trim().length === 0) {
-      setPasswordError("Isi kunci untuk ikut acara dulu.");
+      setPasswordError("Enter the key to join first.");
       passwordInputRef.current?.focus();
       return;
     }
@@ -131,7 +131,7 @@ export function RsvpForm({ token, saved, deadlinePassed, onSaved, demo = false }
       await new Promise((resolve) => setTimeout(resolve, 650));
       if (status === "attending" && !/^\d{2}([.-])\d{2}\1\d{4}$/.test(password.trim())) {
         setPhase("error");
-        setPasswordError("Mode demo: formatnya harus DD.MM.YYYY atau DD-MM-YYYY.");
+        setPasswordError("Demo mode: the format must be DD.MM.YYYY or DD-MM-YYYY.");
         return;
       }
       setPhase("saved");
@@ -159,7 +159,7 @@ export function RsvpForm({ token, saved, deadlinePassed, onSaved, demo = false }
         | null;
 
       if (!response.ok || !payload?.ok || !payload.rsvp) {
-        const text = payload?.error ?? "Gagal menyimpan jawaban. Coba lagi.";
+        const text = payload?.error ?? "Failed to save your answer. Please try again.";
         setPhase("error");
         if (payload?.field === "password") {
           setPasswordError(text);
@@ -178,7 +178,7 @@ export function RsvpForm({ token, saved, deadlinePassed, onSaved, demo = false }
     } catch {
       setPhase("error");
       setFormError(
-        "Jaringan sedang bermasalah dan jawaban belum tersimpan. Isianmu masih ada, coba simpan lagi.",
+        "Network trouble — your answer was not saved. Your input is still here, try saving again.",
       );
     }
   }
@@ -189,8 +189,8 @@ export function RsvpForm({ token, saved, deadlinePassed, onSaved, demo = false }
         <p className="flex items-start gap-2.5 rounded-lg border border-warn/30 bg-warn/8 px-4 py-3 text-[0.8125rem] leading-relaxed text-warn">
           <Lock className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
           <span>
-            Batas waktu RSVP sudah lewat, jadi jawaban tidak bisa diubah lagi. Kalau ada perubahan
-            rencana, hubungi penyelenggara langsung.
+            The RSVP deadline has passed, so answers can no longer be changed. If your plans
+            change, please contact the host directly.
           </span>
         </p>
       </div>
@@ -203,7 +203,7 @@ export function RsvpForm({ token, saved, deadlinePassed, onSaved, demo = false }
         {/* --- Pilihan status ------------------------------------------- */}
         <div role="radiogroup" aria-labelledby={`${baseId}-choice`} className="mt-5">
           <p id={`${baseId}-choice`} className="label-mono mb-2.5">
-            Jawabanmu
+            Your answer
           </p>
           <div className="grid gap-2.5 sm:grid-cols-3">
             {OPTIONS.map((option) => {
@@ -227,7 +227,7 @@ export function RsvpForm({ token, saved, deadlinePassed, onSaved, demo = false }
                   <span className="flex items-center gap-2 font-mono text-[0.8125rem]">
                     <Icon className="size-4 shrink-0" aria-hidden="true" />
                     {RSVP_STATUS_LABEL[option.value]}
-                    {selected ? <span className="sr-only">(dipilih)</span> : null}
+                    {selected ? <span className="sr-only">(selected)</span> : null}
                   </span>
                   <span className="text-[0.75rem] leading-snug text-ink-faint">{option.blurb}</span>
                 </button>
@@ -251,8 +251,8 @@ export function RsvpForm({ token, saved, deadlinePassed, onSaved, demo = false }
                 <p className="mb-3 flex items-start gap-2 text-[0.8125rem] leading-relaxed text-ink-muted">
                   <KeyRound className="mt-0.5 size-4 shrink-0 text-violet-neon" aria-hidden="true" />
                   <span>
-                    Khusus jawaban <span className="text-ink">Hadir</span>, masukkan kunci acara dulu.
-                    Ini cara penyelenggara memastikan konfirmasi datang dari orang yang diundang.
+                    For <span className="text-ink">Attending</span> only, enter the event key first.
+                    It's how the host makes sure the confirmation comes from an invited guest.
                   </span>
                 </p>
 
@@ -291,7 +291,7 @@ export function RsvpForm({ token, saved, deadlinePassed, onSaved, demo = false }
                       type="button"
                       onClick={() => setShowPassword((v) => !v)}
                       className="tap absolute inset-y-0 right-0 grid w-11 place-items-center text-ink-faint hover:text-cyan-neon"
-                      aria-label={showPassword ? "Sembunyikan kunci" : "Tampilkan kunci"}
+                      aria-label={showPassword ? "Hide key" : "Show key"}
                     >
                       {showPassword ? (
                         <EyeOff className="size-4" aria-hidden="true" />
@@ -310,8 +310,8 @@ export function RsvpForm({ token, saved, deadlinePassed, onSaved, demo = false }
         <div className="mt-4">
           <Field
             id={`${baseId}-message`}
-            label="Pesan untuk penyelenggara (opsional)"
-            hint={`${message.length}/${MESSAGE_MAX_LENGTH} karakter`}
+            label="Message for the host (optional)"
+            hint={`${message.length}/${MESSAGE_MAX_LENGTH} characters`}
           >
             <textarea
               id={`${baseId}-message`}
@@ -319,7 +319,7 @@ export function RsvpForm({ token, saved, deadlinePassed, onSaved, demo = false }
               onChange={(event) => setMessage(event.target.value.slice(0, MESSAGE_MAX_LENGTH))}
               rows={3}
               maxLength={MESSAGE_MAX_LENGTH}
-              placeholder="Titip pesan, permintaan khusus, atau ucapan."
+              placeholder="Leave a note, special request, or a wish."
               aria-describedby={`${baseId}-message-hint`}
               className={cx(inputClass, "resize-y leading-relaxed")}
             />
@@ -336,12 +336,12 @@ export function RsvpForm({ token, saved, deadlinePassed, onSaved, demo = false }
             {phase === "saving" ? (
               <>
                 <Spinner />
-                Menyimpan…
+                Saving…
               </>
             ) : (
               <>
                 <Save className="size-4" aria-hidden="true" />
-                {saved ? "Perbarui jawaban" : "Simpan jawaban"}
+                {saved ? "Update answer" : "Save answer"}
               </>
             )}
           </button>
@@ -351,7 +351,7 @@ export function RsvpForm({ token, saved, deadlinePassed, onSaved, demo = false }
             {phase === "saved" ? (
               <p className="flex items-center gap-2 text-[0.8125rem] text-ok">
                 <Check className="size-4 shrink-0" aria-hidden="true" />
-                Jawaban tersimpan di server.
+                Your answer is saved on the server.
               </p>
             ) : null}
             {formError ? (
@@ -364,8 +364,8 @@ export function RsvpForm({ token, saved, deadlinePassed, onSaved, demo = false }
 
           {needsPassword ? (
             <p className="font-mono text-[0.6875rem] leading-relaxed text-ink-faint">
-              Kunci ini diminta setiap kali kamu menyimpan jawaban Hadir. Jawaban Belum pasti dan
-              Tidak hadir tidak perlu kunci.
+              This key is required every time you save an Attending answer. Maybe and Can't make
+              it don't need it.
             </p>
           ) : null}
         </div>

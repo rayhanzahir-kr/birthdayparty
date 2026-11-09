@@ -1,154 +1,161 @@
 # BIRTHDAY://PROTOCOL
 
-Aplikasi undangan ulang tahun personal bertema cyberpunk neon ungu/cyan, mobile-first, dengan
-bahasa visual GitHub Pull Request. Setiap tamu mendapat link unik, membuka undangan tanpa login,
-dan menjawab RSVP untuk tepat satu orang tanpa +1. Penyelenggara mengelola tamu satu per satu dari
-dashboard admin.
+A personal birthday invitation app with a purple/cyan cyberpunk theme, mobile-first and cinematic,
+using a playful GitHub Pull Request visual language. Each guest gets a unique link, opens the
+invitation without logging in, and RSVPs for exactly one person with no +1. The host manages guests
+one at a time from an admin dashboard.
 
-Spesifikasi lengkap ada di [docs/PRD.md](docs/PRD.md). Hasil pengujian yang benar-benar dijalankan
-dan batasannya ada di [docs/VERIFICATION.md](docs/VERIFICATION.md).
+The full specification lives in [docs/PRD.md](docs/PRD.md). What was actually tested, and what was
+not, is recorded in [docs/VERIFICATION.md](docs/VERIFICATION.md).
 
 ---
 
-## 1. Prasyarat
+## 1. Prerequisites
 
-| Kebutuhan | Versi |
+| Requirement | Version |
 |---|---|
-| Node.js | 20.9 atau lebih baru (dikembangkan pada Node 26) |
-| npm | 10 atau lebih baru |
-| Akun Supabase | paket gratis sudah cukup |
-| Akun Vercel | hanya bila ingin deploy |
+| Node.js | 20.9 or newer (developed on Node 26) |
+| npm | 10 or newer |
+| Supabase account | the free plan is enough |
+| Vercel account | only if you want to deploy |
 
-Package manager proyek ini adalah **npm**, dan `package-lock.json` ikut di-commit. Semua dependensi
-dipin ke versi tepat (bukan `latest`) supaya build dapat direproduksi.
+The package manager is **npm**, and `package-lock.json` is committed. Every dependency is pinned to
+an exact version (never `latest`) so builds are reproducible.
 
 ---
 
-## 2. Instalasi lokal
+## 2. Local setup
 
 ```bash
 npm install
 cp .env.example .env.local
 ```
 
-Lalu isi `.env.local` mengikuti bagian berikut. Tanpa konfigurasi Supabase, aplikasi tetap bisa
-dijalankan: halaman menampilkan pesan setup yang jujur, dan `/demo` tetap bisa dibuka. Login dan
-penyimpanan RSVP **tidak** dipalsukan.
+Then fill in `.env.local` as described below. Without Supabase configured the app still runs: pages
+show an honest setup notice, and `/demo` still works. Sign-in and RSVP saving are **not** faked.
 
 ```bash
 npm run dev        # http://localhost:3000
 ```
 
-Perintah lain:
+Other commands:
 
 ```bash
-npm run typecheck      # TypeScript strict, tanpa emit
-npm test               # unit test (node:test + tsx)
+npm run typecheck      # TypeScript strict, no emit
+npm test               # unit tests (node:test + tsx)
 npm run build          # production build
-npm run start          # jalankan hasil build
-npm run hash-password  # buat INVITE_PASSWORD_HASH
+npm run start          # serve the build
+npm run hash-password  # generate INVITE_PASSWORD_HASH
 ```
 
 ---
 
 ## 3. Environment variables
 
-| Nama | Scope | Keterangan |
+| Name | Scope | Purpose |
 |---|---|---|
-| `SUPABASE_URL` | server | URL proyek Supabase |
-| `SUPABASE_PUBLISHABLE_KEY` | server | publishable/anon key; dibatasi RLS |
-| `SUPABASE_SERVICE_ROLE_KEY` | server | melewati RLS; jangan pernah diberi prefix `NEXT_PUBLIC` |
-| `SITE_URL` | server | basis link undangan yang dibagikan ke tamu |
-| `INVITE_PASSWORD_HASH` | **server saja** | SHA-256 kunci "ikut acara" |
-| `ADDITIONAL_ALLOWED_ORIGINS` | server, opsional | origin tambahan yang boleh mengirim mutasi, dipisah koma |
-| `TRUSTED_IP_HEADER` | server, opsional | hanya bila di-host di belakang proxy selain Vercel |
+| `SUPABASE_URL` | server | Supabase project URL |
+| `SUPABASE_PUBLISHABLE_KEY` | server | publishable/anon key; constrained by RLS |
+| `SUPABASE_SERVICE_ROLE_KEY` | server | bypasses RLS; never give it a `NEXT_PUBLIC` prefix |
+| `SITE_URL` | server | base for the invitation links you share |
+| `INVITE_PASSWORD_HASH` | server | SHA-256 of the "key to join" |
+| `ADDITIONAL_ALLOWED_ORIGINS` | server, optional | extra origins allowed to send mutations, comma separated |
+| `TRUSTED_IP_HEADER` | server, optional | only when hosting behind a proxy other than Vercel |
 
-> **Tidak ada variabel berprefix `NEXT_PUBLIC_`.** Browser tidak pernah menghubungi Supabase
-> secara langsung — login admin berjalan lewat route server — sehingga URL dan publishable key
-> tidak perlu ikut ke bundle browser. Nama lama berprefix `NEXT_PUBLIC_` masih dibaca sebagai
-> cadangan agar konfigurasi lama tetap jalan.
+> **No variable uses the `NEXT_PUBLIC_` prefix.** The browser never contacts Supabase directly —
+> admin sign-in runs through a server route — so the URL and publishable key never need to reach the
+> client bundle. The older `NEXT_PUBLIC_`-prefixed names are still read as a fallback so existing
+> setups keep working.
 >
-> `SITE_URL` menentukan domain pada link undangan yang kamu bagikan. Kalau keliru, aplikasi tetap
-> berfungsi (proteksi CSRF memakai `Sec-Fetch-Site`), tetapi link yang di-generate akan menunjuk
-> domain yang salah — jadi tetap isi dengan benar.
+> `SITE_URL` decides the domain used in the invitation links you share. If it is wrong the app still
+> works (CSRF protection relies on `Sec-Fetch-Site`), but generated links will point at the wrong
+> domain — so set it correctly anyway.
 
-### Membuat `INVITE_PASSWORD_HASH`
+### Generating `INVITE_PASSWORD_HASH`
 
 ```bash
 npm run hash-password
-# Masukkan tanggal lahir (DD.MM.YYYY atau DD-MM-YYYY): [input tidak muncul di layar]
-# INVITE_PASSWORD_HASH=<64 karakter hex>
+# Enter the birthday (DD.MM.YYYY or DD-MM-YYYY): [input is hidden]
+# INVITE_PASSWORD_HASH=<64 hex characters>
 ```
 
-Skrip membaca input **tersembunyi** dari terminal, atau dari stdin bila dipipa
-(`printf '...' | npm run hash-password --silent`). Skrip **menolak** password sebagai argumen shell,
-karena argumen tersimpan di riwayat shell dan terlihat di daftar proses. Yang dicetak hanya hash-nya.
+The script reads the input **hidden** from the terminal, or from stdin when piped
+(`printf '...' | npm run hash-password --silent`). It **refuses** the password as a shell argument,
+because arguments are kept in shell history and visible in the process list. Only the hash is
+printed.
 
-Salin baris hasilnya ke `.env.local`, dan ke Environment Variables Vercel sebagai variabel server.
+Copy the resulting line into `.env.local`, and into your Vercel environment variables as a server
+variable.
 
 ---
 
-## 4. Membuat proyek Supabase
+## 4. Creating the Supabase project
 
-1. Buat proyek baru di [supabase.com/dashboard](https://supabase.com/dashboard).
-2. Buka **Project Settings → API**, lalu salin:
+1. Create a new project at [supabase.com/dashboard](https://supabase.com/dashboard).
+2. Open **Project Settings → API Keys** and copy:
    - *Project URL* → `SUPABASE_URL`
    - *publishable* / *anon* key → `SUPABASE_PUBLISHABLE_KEY`
    - *service_role* / *secret* key → `SUPABASE_SERVICE_ROLE_KEY`
 
 ---
 
-## 5. Menjalankan migration
+## 5. Running the migrations
 
-Buka **SQL Editor** di dashboard Supabase dan jalankan berurutan:
+Open the **SQL Editor** in the Supabase dashboard and run, in order:
 
-1. `supabase/migrations/0001_init.sql` — tabel, constraint, index, RLS + policy, RPC, grant/revoke.
-2. `supabase/migrations/0002_seed.sql` — satu baris acara berisi **placeholder**. Tanggal dan batas
-   RSVP sengaja `NULL`; tidak ada tanggal atau lokasi yang dikarang. Idempoten.
+1. `supabase/migrations/0001_init.sql` — tables, constraints, indexes, RLS + policies, RPCs,
+   grants/revokes.
+2. `supabase/migrations/0002_seed.sql` — a single event row of **placeholders**. The date and RSVP
+   deadline are deliberately `NULL`; no date or location is invented. Idempotent.
 
-Kalau memakai Supabase CLI:
+There are also two convenience files that combine the above into single pastes:
+`supabase/SETUP-1-schema.sql` and `supabase/SETUP-2-admin.sql`.
+
+> Both migrations were tested against a real PostgreSQL 16 instance, including being run twice to
+> confirm idempotency. Details in [docs/VERIFICATION.md](docs/VERIFICATION.md).
+
+Using the Supabase CLI instead:
 
 ```bash
 supabase link --project-ref <project-ref>
 supabase db push
 ```
 
-> Kedua file sudah diuji dijalankan pada PostgreSQL 16 nyata, termasuk dijalankan dua kali untuk
-> memastikan idempoten. Rinciannya di [docs/VERIFICATION.md](docs/VERIFICATION.md).
+### What the migrations do
 
-### Yang dilakukan migration
-
-- Enum `rsvp_status` (`attending` / `maybe` / `declined`) — nilai lain ditolak database.
-- `guests.token_hash` UNIQUE NOT NULL; hanya SHA-256 yang disimpan, **bukan** token mentah.
-- `rsvps.guest_id` UNIQUE — satu undangan maksimal satu respons aktif. Tidak ada kolom `guest_count`.
-- Constraint `events_deadline_before_start`: batas RSVP tidak boleh sesudah waktu mulai acara.
-- RLS aktif **dan** `force row level security` pada semua tabel. `anon` tidak mendapat hak apa pun;
-  `authenticated` hanya `SELECT`, dan masih dipersempit policy ke admin ter-allowlist.
-- RPC `submit_rsvp` (SECURITY DEFINER) memvalidasi token aktif + deadline **di dalam transaksi
-  penulisan** dengan row lock, dan menolak `attending` tanpa flag password terverifikasi.
-- RPC `consume_rate_limit` / `reset_rate_limit` / `purge_expired_rate_limits` untuk limiter persisten.
-- Semua fungsi sensitif di-`revoke` dari `PUBLIC`/`anon`/`authenticated` dan di-`grant` hanya ke
-  `service_role`. (PostgreSQL memberi `EXECUTE` ke `PUBLIC` secara default — ini dicabut eksplisit.)
+- `rsvp_status` enum (`attending` / `maybe` / `declined`) — any other value is rejected by the DB.
+- `guests.token_hash` UNIQUE NOT NULL; only the SHA-256 is stored, **never** the raw token.
+- `rsvps.guest_id` UNIQUE — one invitation means at most one active response. No `guest_count`.
+- Constraint `events_deadline_before_start`: the RSVP deadline cannot be after the event start.
+- RLS enabled **and** forced on every table. `anon` gets no privileges at all; `authenticated` gets
+  `SELECT` only, which policies then narrow to allowlisted admins.
+- RPC `submit_rsvp` (SECURITY DEFINER) re-validates the active token and the deadline **inside the
+  same transaction as the write**, with a row lock, and rejects `attending` without a verified
+  password flag.
+- RPCs `consume_rate_limit` / `reset_rate_limit` / `purge_expired_rate_limits` back the persistent
+  limiter.
+- Every sensitive function is `revoke`d from `PUBLIC`/`anon`/`authenticated` and `grant`ed only to
+  `service_role`. (PostgreSQL grants `EXECUTE` to `PUBLIC` by default — this is revoked explicitly.)
 
 ---
 
-## 6. Membuat akun admin dan allowlist
+## 6. Creating the admin account and allowlist
 
-Tidak ada signup publik, dan tidak ada jalur dari browser untuk menjadikan diri sendiri admin.
+There is no public sign-up, and no path from the browser to make yourself an admin.
 
-1. **Authentication → Users → Add user**. Isi email dan password, centang *Auto Confirm User*.
-2. Jalankan `supabase/migrations/0003_admin_allowlist.sql.example` di SQL Editor setelah mengganti
-   alamat emailnya:
+1. **Authentication → Users → Add user**. Enter an email and password, and tick *Auto Confirm User*.
+2. Run `supabase/migrations/0003_admin_allowlist.sql.example` in the SQL Editor after replacing the
+   email:
 
 ```sql
 insert into public.admin_users (user_id, note)
-select id, 'penyelenggara utama'
+select id, 'primary host'
 from auth.users
-where email = 'email-admin-kamu@example.com'
+where email = 'your-admin-email@example.com'
 on conflict (user_id) do nothing;
 ```
 
-3. Verifikasi:
+3. Verify:
 
 ```sql
 select au.user_id, u.email
@@ -156,191 +163,194 @@ from public.admin_users au
 join auth.users u on u.id = au.user_id;
 ```
 
-Akun yang bisa login tetapi **tidak** ada di `admin_users` akan ditolak dengan pesan generik yang
-sama seperti password salah.
+An account that can sign in but is **not** in `admin_users` is rejected with the same generic
+message as a wrong password.
 
 ---
 
-## 7. Alur pemakaian
+## 7. How it is used
 
-### Penyelenggara
+### Host
 
-1. Buka `/admin` → diarahkan ke login atau dashboard sesuai sesi.
-2. Isi **Event settings**: judul, penyelenggara, zona waktu, tanggal, lokasi, dress code, deskripsi,
-   batas RSVP. Form tanggal menyebut zona waktu yang dipakai.
-3. **Buat undangan** per tamu. Link mentah muncul **sekali**, dengan tombol salin.
-4. Kirim link ke tamu (manual atau tombol WhatsApp opsional).
-5. Pantau ringkasan dan daftar tamu; tersedia pencarian nama, filter status, dan refresh.
-6. **Buat ulang link** bila link lama bocor — link lama langsung tidak berlaku, RSVP tetap tersimpan.
-   **Nonaktifkan link** untuk menolak akses tanpa menghapus riwayat.
+1. Open `/admin` → you are routed to sign-in or the dashboard depending on your session.
+2. Fill in **Event settings**: title, host, time zone, date, location, dress code, description,
+   RSVP deadline. The date fields state which time zone they are read in.
+3. **Create an invitation** per guest. The raw link appears **once**, with a copy button.
+4. Send the link to the guest (manually, or via the optional WhatsApp button).
+5. Watch the summary and guest list; search by name, filter by status, and refresh.
+6. **Regenerate link** if a link leaks — the old one dies immediately, the RSVP is kept.
+   **Disable link** rejects access without deleting history.
 
-> Database hanya menyimpan hash token, jadi link **tidak dapat ditampilkan ulang**. Satu-satunya
-> jalan adalah membuat ulang link, dan itu mematikan link sebelumnya.
+> The database stores only the token hash, so a link **cannot be shown again**. The only option is
+> to regenerate it, which invalidates the previous link.
 
-### Tamu
+### Guest
 
-1. Buka link personal → nama, detail acara, dan formulir RSVP **langsung tampil tanpa password**.
-2. Pilih **Hadir**, **Belum pasti**, atau **Tidak hadir**, plus pesan opsional (maks 500 karakter).
-3. Khusus **Hadir**, isi kunci acara (tanggal lahir penyelenggara) lalu simpan.
-4. Setelah server mengonfirmasi, animasi merge berjalan dan **digital party pass** muncul.
-5. Membuka ulang link menampilkan undangan dan pass tersimpan **tanpa** memasukkan kunci lagi.
-
----
-
-## 8. Kunci "ikut acara" (password tanggal lahir)
-
-- Undangan dibuka oleh **token personal**, bukan password.
-- Password hanya menjadi kunci saat **menyimpan** pilihan `attending`. `maybe` dan `declined` tidak
-  memerlukannya.
-- Diterima: dua digit hari, dua digit bulan, empat digit tahun, dengan separator titik **atau** tanda
-  hubung secara **konsisten** (`DD.MM.YYYY` / `DD-MM-YYYY`), setelah trim spasi luar. Server
-  menormalkan ke `YYYY-MM-DD` sebelum membandingkan hash.
-- Ditolak: separator campuran, format lain, satu digit, tanggal yang tidak ada di kalender, dan nilai
-  salah.
-- Verifikasi **sepenuhnya di server**, sebelum penulisan. Token aktif, deadline, password, dan payload
-  harus lolos lebih dulu — tidak ada `attending` yang disimpan dulu lalu diperiksa belakangan.
-- **Setiap** submit `attending` memerlukan password lagi, termasuk saat mengubah respons atau hanya
-  mengubah pesan. Tidak ada sesi unlock, cookie password, atau `INVITE_SESSION_SECRET`.
-- Password salah/kosong: respons lama **tidak berubah**, pass baru tidak diterbitkan, error muncul di
-  dekat kolom password, dan pilihan serta pesan tetap ada untuk dicoba ulang.
-- Mengubah `attending` → `maybe`/`declined` tidak perlu password dan menghilangkan pass aktif. Kembali
-  ke `attending` wajib password lagi.
-
-> **Model keamanannya:** tanggal lahir adalah rahasia bersama yang mudah diketahui orang dekat. Ini
-> **kunci konfirmasi ikut acara**, bukan verifikasi identitas. Begitu pula link undangan: link adalah
-> *bearer credential* — siapa pun yang memegangnya bisa membaca undangan dan mengubah satu RSVP.
-> Sistem membatasi satu slot per undangan, bukan menjamin identitas fisik orangnya.
+1. Open the personal link → name, event details, and the RSVP form appear **immediately, with no
+   password**.
+2. Choose **Attending**, **Maybe**, or **Can't make it**, plus an optional message (max 500 chars).
+3. For **Attending** only, enter the event key (the host's birthday) and save.
+4. Once the server confirms, the merge animation plays and the **digital party pass** appears.
+5. Reopening the link shows the invitation and the saved pass **without** entering the key again.
 
 ---
 
-## 9. Rate limit
+## 8. The "key to join" (birthday password)
 
-Limiter **persisten** berbasis PostgreSQL (`rate_limits` + RPC `consume_rate_limit`), sehingga tetap
-berlaku di Vercel serverless — berbeda dengan limiter in-memory yang tidak memberi perlindungan
-terdistribusi.
+- The invitation is opened by the **personal token**, not by a password.
+- The password is only a key when **saving** an `attending` answer. `maybe` and `declined` never
+  require it.
+- Accepted: two-digit day, two-digit month, four-digit year, with dot **or** hyphen separators used
+  **consistently** (`DD.MM.YYYY` / `DD-MM-YYYY`), after trimming outer whitespace. The server
+  normalises to `YYYY-MM-DD` before comparing hashes.
+- Rejected: mixed separators, other formats, single digits, dates that do not exist, and wrong
+  values.
+- Verification happens **entirely on the server**, before the write. The active token, the deadline,
+  the password and the payload must all pass first — no `attending` is ever saved first and checked
+  afterwards.
+- **Every** `attending` submission requires the password again, including changing a response or
+  only editing the message. There is no unlock session, password cookie, or `INVITE_SESSION_SECRET`.
+- On a wrong or empty password the previous response is **unchanged**, no new pass is issued, the
+  error appears next to the password field, and the choice and message are preserved for a retry.
+- Changing `attending` → `maybe`/`declined` needs no password and removes the active pass. Going
+  back to `attending` requires the password again.
 
-| Operasi | Ambang awal |
+> **The security model:** a birthday is a shared secret that people close to you can easily know. It
+> is a **key to confirm attendance**, not identity verification. The same applies to the invitation
+> link: it is a *bearer credential* — anyone holding it can read the invitation and change one RSVP.
+> The system limits one slot per invitation; it does not guarantee who the person is.
+
+---
+
+## 9. Rate limiting
+
+A **persistent** limiter backed by PostgreSQL (`rate_limits` + the `consume_rate_limit` RPC), so it
+still holds on Vercel serverless — unlike an in-memory limiter, which provides no distributed
+protection.
+
+| Operation | Initial threshold |
 |---|---|
-| Pembacaan undangan | 60 / menit / IP |
-| Simpan RSVP | 10 / menit / token + 30 / menit / IP |
-| Percobaan password `attending` | 5 / 15 menit per (IP, token) + 20 / 15 menit per IP |
-| Login admin | 5 / 15 menit / IP |
+| Reading an invitation | 60 / minute / IP |
+| Saving an RSVP | 10 / minute / token + 30 / minute / IP |
+| `attending` password attempts | 5 / 15 min per (IP, token) + 20 / 15 min per IP |
+| Admin sign-in | 5 / 15 min / IP |
 
-Rinciannya:
+Details:
 
-- **Identifier di-hash.** Bucket adalah SHA-256 dari `(nama aturan | IP | token hash)`, jadi tidak ada
-  IP mentah atau token yang tersimpan.
-- **Perilaku saat limiter gagal.** Percobaan password dan RSVP **fail-closed** (ditolak) — kegagalan
-  limiter tidak boleh diam-diam membuka semua akses. Pembacaan undangan **fail-open**, supaya tamu
-  tidak terkunci dari membaca undangan karena masalah infrastruktur.
-- **Percobaan yang berhasil direset**, sehingga tidak ikut menghabiskan kuota.
-- **Sumber IP.** Memakai header platform (`x-vercel-forwarded-for` / `x-forwarded-for`), bukan header
-  arbitrer. Di luar Vercel, setel `TRUSTED_IP_HEADER` sesuai proxy.
-- **Cleanup.** Jalankan `select public.purge_expired_rate_limits();` secara berkala (pg_cron atau
-  scheduled function). Limiter tetap benar tanpa ini; hanya tabelnya yang tumbuh.
-- Kunci salah **tidak** memblokir pembacaan undangan maupun pilihan `maybe`/`declined`.
+- **Identifiers are hashed.** A bucket is the SHA-256 of `(rule name | IP | token hash)`, so no raw
+  IP or token is ever stored.
+- **Behaviour when the limiter fails.** Password attempts and RSVPs **fail closed** (rejected) — a
+  limiter failure must not silently open everything. Reading an invitation **fails open**, so guests
+  are not locked out of reading because of an infrastructure problem.
+- **Successful attempts reset the counter**, so they do not consume quota.
+- **IP source.** Platform headers (`x-vercel-forwarded-for` / `x-forwarded-for`), not arbitrary ones.
+  Outside Vercel, set `TRUSTED_IP_HEADER` to match your proxy.
+- **Cleanup.** Run `select public.purge_expired_rate_limits();` periodically (pg_cron or a scheduled
+  function). The limiter stays correct without it; only the table grows.
+- A wrong key does **not** block reading the invitation or choosing `maybe`/`declined`.
 
 ---
 
-## 10. Uji manual
+## 10. Manual testing
 
-Setelah migration dan admin siap:
+Once the migrations and the admin account are ready:
 
-| # | Langkah | Hasil yang diharapkan |
+| # | Step | Expected |
 |---|---|---|
-| 1 | Login admin yang sah | Dashboard terbuka |
-| 2 | Login bukan admin / salah password | Pesan generik yang sama |
-| 3 | Buka `/admin/dashboard` tanpa login | Diarahkan ke `/admin/login` |
-| 4 | Tambah tamu | Link muncul sekali, bisa disalin |
-| 5 | Buka link | Nama + detail + form langsung tampil, tanpa password |
-| 6 | Pilih **Belum pasti**, simpan | Tersimpan tanpa password |
-| 7 | Pilih **Hadir** + `10.11.2004` (format titik) | Tersimpan, merge berjalan, pass muncul |
-| 8 | Ulangi dengan format tanda hubung | Juga diterima |
-| 9 | **Hadir** + `10.11-2004` (campuran) | Ditolak; respons lama utuh |
-| 10 | **Hadir** + password salah / kosong | Ditolak; tidak ada pass baru; isian tetap ada |
-| 11 | Refresh link setelah berhasil | Undangan + pass tampil tanpa password |
-| 12 | Ubah **Hadir** → **Tidak hadir** | Tidak perlu password; pass hilang |
-| 13 | Kembali ke **Hadir** | Password diminta lagi |
-| 14 | Salah password 6× berturut-turut | HTTP 429 dengan pesan retry |
-| 15 | Nonaktifkan link, buka lagi | `/access-denied` |
-| 16 | Buat ulang link, buka link lama | `/access-denied`; link baru berfungsi; RSVP lama tetap ada |
-| 17 | Lewati deadline, coba simpan | Ditolak server dengan alasan jelas |
-| 18 | Klik simpan berulang cepat | Tidak ada RSVP ganda, tidak ada slot tambahan |
-| 19 | Matikan jaringan lalu simpan | Tidak ada sukses palsu; isian tetap ada |
-| 20 | Zona waktu perangkat diubah | Tanggal tetap mengikuti zona waktu acara |
-| 21 | Mobile 375 px, keyboard, reduced motion | Semua fitur inti tetap bisa dipakai |
+| 1 | Sign in as a valid admin | Dashboard opens |
+| 2 | Sign in as non-admin / wrong password | Same generic message |
+| 3 | Open `/admin/dashboard` signed out | Redirected to `/admin/login` |
+| 4 | Add a guest | Link appears once and can be copied |
+| 5 | Open the link | Name + details + form appear, no password |
+| 6 | Choose **Maybe**, save | Saved without a key |
+| 7 | Choose **Attending** + `DD.MM.YYYY` (dot form) | Saved, merge plays, pass appears |
+| 8 | Repeat with the hyphen form | Also accepted |
+| 9 | **Attending** + mixed separators | Rejected; previous response intact |
+| 10 | **Attending** + wrong / empty password | Rejected; no new pass; input preserved |
+| 11 | Refresh after a successful attending | Invitation + pass shown without a password |
+| 12 | Change **Attending** → **Can't make it** | No password needed; pass disappears |
+| 13 | Switch back to **Attending** | Password required again |
+| 14 | Six wrong passwords in a row | HTTP 429 with a retry message |
+| 15 | Disable a link, reopen it | `/access-denied` |
+| 16 | Regenerate a link, open the old one | `/access-denied`; new link works; RSVP preserved |
+| 17 | Let the deadline pass, try to save | Rejected by the server with a clear reason |
+| 18 | Click save rapidly | No duplicate RSVP, no extra slot |
+| 19 | Go offline, then save | No false success; input preserved |
+| 20 | Change the device time zone | Dates still follow the event time zone |
+| 21 | Mobile 375 px, keyboard, reduced motion | All core features still usable |
 
-Uji bypass endpoint langsung (ganti `<TOKEN>` dan origin):
+Direct endpoint bypass tests (replace `<TOKEN>` and the origin):
 
 ```bash
-# attending tanpa password -> harus ditolak
+# attending without a password -> must be rejected
 curl -i -X POST http://localhost:3000/api/rsvp \
   -H 'Content-Type: application/json' -H 'Origin: http://localhost:3000' \
   -d '{"token":"<TOKEN>","status":"attending"}'
 
-# field terlarang -> harus ditolak
+# forbidden fields -> must be rejected
 curl -i -X POST http://localhost:3000/api/rsvp \
   -H 'Content-Type: application/json' -H 'Origin: http://localhost:3000' \
-  -d '{"token":"<TOKEN>","status":"attending","guest_count":5,"password":"10.11.2004"}'
+  -d '{"token":"<TOKEN>","status":"attending","guest_count":5,"password":"DD.MM.YYYY"}'
 ```
 
 ---
 
-## 11. Deploy ke Vercel
+## 11. Deploying to Vercel
 
-1. Push repo ke GitHub/GitLab.
-2. Di Vercel: **Add New → Project**, pilih repo. Framework Next.js terdeteksi otomatis.
-3. Tambahkan Environment Variables (Production **dan** Preview):
+1. Push the repo to GitHub/GitLab.
+2. In Vercel: **Add New → Project**, pick the repo. Next.js is detected automatically.
+3. Add the environment variables (Production **and** Preview):
    - `SUPABASE_URL`
    - `SUPABASE_PUBLISHABLE_KEY`
    - `SUPABASE_SERVICE_ROLE_KEY`
    - `INVITE_PASSWORD_HASH`
-   - `SITE_URL` = `https://<nama-proyek>.vercel.app`
-4. Deploy, lalu **perbarui `SITE_URL`** ke domain final dan deploy ulang supaya link undangan
-   menunjuk domain yang benar.
-5. Untuk Preview deployment, tambahkan URL preview ke `ADDITIONAL_ALLOWED_ORIGINS` bila perlu.
+   - `SITE_URL` = `https://<project>.vercel.app`
+4. Deploy, then **update `SITE_URL`** to the final domain and redeploy so invitation links point at
+   the right domain.
+5. For Preview deployments, add the preview URL to `ADDITIONAL_ALLOWED_ORIGINS` if needed.
 
-Subdomain `*.vercel.app` gratis sudah cukup; tidak perlu membeli domain. Ketersediaan nama subdomain
-dan kuota paket gratis mengikuti syarat provider yang berlaku.
+A free `*.vercel.app` subdomain is enough; no need to buy a domain. Subdomain availability and free
+plan quotas follow the provider's own terms.
 
-### Supabase Site URL / redirect URL
+### Supabase Site URL / redirect URLs
 
 **Authentication → URL Configuration**:
 
-- *Site URL*: `https://<nama-proyek>.vercel.app`
-- *Redirect URLs*: tambahkan `https://<nama-proyek>.vercel.app/**` dan `http://localhost:3000/**`
+- *Site URL*: `https://<project>.vercel.app`
+- *Redirect URLs*: add `https://<project>.vercel.app/**` and `http://localhost:3000/**`
 
-### Catatan logging hosting
+### A note on hosting logs
 
-Tinjau redaksi URL pada log platform sebelum produksi. Aplikasi ini tidak pernah mencatat token,
-URL undangan lengkap, password, atau secret — tetapi **access log** hosting biasanya mencatat path
-request, dan path undangan memuat token. Batasi akses ke log tersebut.
+Review URL redaction in your platform logs before going live. This application never logs tokens,
+full invitation URLs, passwords, or secrets — but hosting **access logs** usually record request
+paths, and an invitation path contains the token. Restrict access to those logs.
 
 ---
 
-## 12. Struktur proyek
+## 12. Project structure
 
 ```
 app/
-  page.tsx                     landing publik (tanpa data privat)
-  invite/[token]/page.tsx      undangan personal, validasi server
-  access-denied/page.tsx       pesan netral untuk semua kegagalan link
-  demo/page.tsx                demo visual, data fiktif, tanpa tulis data
-  admin/                       redirect, login, dashboard
-  api/rsvp/route.ts            satu-satunya jalur penyimpanan RSVP
-  api/admin/...                endpoint admin, semuanya dijaga ulang
+  page.tsx                     public landing (no private data)
+  invite/[token]/page.tsx      personal invitation, server validated
+  access-denied/page.tsx       neutral message for every link failure
+  demo/page.tsx                visual demo, fictional data, writes nothing
+  admin/                       redirect, sign-in, dashboard
+  api/rsvp/route.ts            the only path that saves an RSVP
+  api/admin/...                admin endpoints, each guarded again
 components/
-  invite/                      boot, hero, event card, panel PR, form, pass, terminal
-  admin/                       login, dashboard, tabel tamu, event settings, copy
-  ui/                          primitives + pesan setup
+  invite/                      boot, hero, event card, PR panel, form, pass, terminal
+  admin/                       sign-in, dashboard, guest table, event settings, copy
+  ui/                          primitives + setup notice
 lib/
-  password-format.ts           normalisasi kunci (aman untuk client)
-  password.ts                  verifikasi hash (server)
+  password-format.ts           key normalisation (client-safe)
+  password.ts                  hash verification (server)
+  origin.ts                    CSRF origin decision (pure, unit tested)
   tokens.ts  invitations.ts  admin-data.ts  auth.ts  admin-guard.ts
   rate-limit.ts  datetime.ts  validation.ts  env.ts  http.ts
-supabase/migrations/           0001 init · 0002 seed · 0003 contoh allowlist
-scripts/hash-password.mjs      setup INVITE_PASSWORD_HASH (input tersembunyi)
-tests/                         unit test untuk aturan kritis
+supabase/migrations/           0001 init · 0002 seed · 0003 allowlist example
+scripts/hash-password.mjs      sets up INVITE_PASSWORD_HASH (hidden input)
+tests/                         unit tests for the critical rules
 docs/                          PRD.md · VERIFICATION.md
 ```
 
@@ -348,24 +358,25 @@ docs/                          PRD.md · VERIFICATION.md
 
 ## 13. Troubleshooting
 
-| Gejala | Penyebab & solusi |
+| Symptom | Cause & fix |
 |---|---|
-| Halaman menampilkan "Konfigurasi Supabase diperlukan" | Env Supabase belum lengkap. Isi ketiga nilainya di `.env.local`, lalu restart dev server. |
-| HTTP 403 "origin tidak dikenal" saat menyimpan | Request datang lintas situs, atau browser tidak mengirim `Sec-Fetch-Site`. Untuk browser lama, samakan `SITE_URL` dengan origin yang dipakai atau tambahkan ke `ADDITIONAL_ALLOWED_ORIGINS`. |
-| "Kunci acara belum disetel di server" (503) | `INVITE_PASSWORD_HASH` kosong/tidak valid. Jalankan `npm run hash-password`. |
-| Kunci yang benar tetap ditolak | Hash dibuat dari tanggal berbeda, atau separator campuran. Buat ulang hash dan perhatikan formatnya. |
-| Login admin selalu gagal | Akun belum ada di `admin_users`. Jalankan SQL allowlist di bagian 6. |
-| "Data acara belum ada" di dashboard | `0002_seed.sql` belum dijalankan. |
-| HTTP 429 terus-menerus | Limiter fail-closed karena RPC tidak terjangkau. Pastikan `0001_init.sql` sudah dijalankan dan `SUPABASE_SERVICE_ROLE_KEY` benar. |
-| Link undangan lama tidak berfungsi | Mungkin sudah dirotasi atau dinonaktifkan. Ini perilaku yang benar; kirim link baru. |
-| Link tidak bisa disalin | Clipboard tidak tersedia di konteks itu. Teks sudah diseleksi — salin manual. |
-| Jam acara terasa bergeser | Dashboard membaca input pada **zona waktu acara**. Pastikan field zona waktu sudah benar. |
-| `permission denied for function submit_rsvp` | Memanggil RPC dengan anon/authenticated key. RPC ini sengaja hanya untuk `service_role`. |
+| Page shows "Supabase configuration required" | Supabase env values incomplete. Fill all three in `.env.local` and restart the dev server. |
+| HTTP 403 "unrecognized origin" when saving | The request came cross-site, or the browser sent no `Sec-Fetch-Site`. For old browsers, match `SITE_URL` to the origin in use or add it to `ADDITIONAL_ALLOWED_ORIGINS`. |
+| "The event key is not set on the server" (503) | `INVITE_PASSWORD_HASH` is empty or invalid. Run `npm run hash-password`. |
+| The correct key is still rejected | The hash was generated from a different date, or separators were mixed. Regenerate and check the format. |
+| Admin sign-in always fails | The account is not in `admin_users`. Run the allowlist SQL in section 6. |
+| "No event data yet" on the dashboard | `0002_seed.sql` has not been run. |
+| Constant HTTP 429 | The limiter fails closed because the RPC is unreachable. Confirm `0001_init.sql` ran and `SUPABASE_SERVICE_ROLE_KEY` is correct. |
+| An old invitation link stopped working | It was probably rotated or disabled. That is correct behaviour; send the new link. |
+| Link cannot be copied | Clipboard is unavailable in that context. The text is pre-selected — copy it manually. |
+| Event times look shifted | The dashboard reads input in the **event time zone**. Check the time zone field. |
+| `permission denied for function submit_rsvp` | You called the RPC with an anon/authenticated key. It is deliberately restricted to `service_role`. |
+| Changed env on Vercel but nothing happened | Environment changes only apply to new deployments. Redeploy. |
 
 ---
 
-## 14. Di luar cakupan
+## 14. Out of scope
 
-Import CSV/bulk invite, WhatsApp API, email blast, pembayaran, signup tamu, +1, UI multi-event,
-QR check-in, verifikasi identitas/OTP tamu, aplikasi native, dan domain berbayar. Tidak ada
-integrasi GitHub API — Pull Request hanya metafora visual.
+CSV import / bulk invites, the WhatsApp API, email blasts, payments, guest sign-up, +1, a
+multi-event UI, QR check-in, guest identity/OTP verification, native apps, and paid domains. There is
+no GitHub API integration — the Pull Request look is purely a visual metaphor.

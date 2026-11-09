@@ -73,7 +73,7 @@ describe("formatEventDateTime", () => {
     // Instant yang sama = 01:00 keesokan hari di Jakarta (WIB, UTC+7).
     const jakarta = formatEventDateTime("2026-12-01T18:00:00.000Z", "Asia/Jakarta");
     assert.match(jakarta, /01[.:]00/);
-    assert.match(jakarta, /2 Desember 2026/);
+    assert.match(jakarta, /2 December 2026/);
   });
 
   it("selalu menyertakan nama zona waktu agar tidak ambigu", () => {
@@ -81,8 +81,8 @@ describe("formatEventDateTime", () => {
   });
 
   it("memakai placeholder, bukan tanggal karangan, ketika null", () => {
-    assert.equal(formatEventDateTime(null, "Europe/Berlin"), "Belum ditentukan");
-    assert.equal(formatEventDateTime("bukan-tanggal", "Europe/Berlin"), "Belum ditentukan");
+    assert.equal(formatEventDateTime(null, "Europe/Berlin"), "To be announced");
+    assert.equal(formatEventDateTime("bukan-tanggal", "Europe/Berlin"), "To be announced");
   });
 });
 

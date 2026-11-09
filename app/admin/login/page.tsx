@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export const metadata: Metadata = {
-  title: "Login penyelenggara · BIRTHDAY://PROTOCOL",
+  title: "Host sign in · BIRTHDAY://PROTOCOL",
   robots: { index: false, follow: false },
 };
 

@@ -27,12 +27,12 @@ export const runtime = "nodejs";
  */
 export async function POST(request: Request) {
   if (!verifySameOrigin(request)) {
-    return errorResponse("Permintaan ditolak karena origin tidak dikenal.", 403);
+    return errorResponse("Request rejected: unrecognized origin.", 403);
   }
 
   if (!isServiceClientConfigured()) {
     return errorResponse(
-      "Server belum dikonfigurasi untuk menyimpan RSVP. Hubungi penyelenggara.",
+      "The server is not configured to save RSVPs. Please contact the host.",
       503,
     );
   }
@@ -41,7 +41,7 @@ export async function POST(request: Request) {
   try {
     raw = await readJsonBody(request);
   } catch (cause) {
-    const message = cause instanceof BodyError ? cause.message : "Body tidak dapat dibaca.";
+    const message = cause instanceof BodyError ? cause.message : "Could not read the request body.";
     return errorResponse(message, 400);
   }
 
@@ -57,7 +57,7 @@ export async function POST(request: Request) {
 
   // Bentuk token diperiksa sebelum dipakai sebagai kunci rate limit.
   if (!isTokenShapeValid(token)) {
-    return errorResponse("Link undangan tidak valid.", 404, { code: "invalid_token" });
+    return errorResponse("Invalid invitation link.", 404, { code: "invalid_token" });
   }
 
   const clientIp = getClientIp(request);
@@ -81,8 +81,8 @@ export async function POST(request: Request) {
       // Tidak memalsukan keberhasilan saat hash belum dikonfigurasi.
       logServerEvent("invite_password_hash_missing");
       return errorResponse(
-        "Konfirmasi kehadiran belum bisa diproses karena kunci acara belum disetel di server. " +
-          "Hubungi penyelenggara.",
+        "Attendance cannot be confirmed because the event key is not set on the server. " +
+          "Please contact the host.",
         503,
         { field: "password" },
       );
@@ -109,7 +109,7 @@ export async function POST(request: Request) {
     if (!check.ok) {
       if (check.reason === "not_configured") {
         return errorResponse(
-          "Kunci acara belum disetel di server. Hubungi penyelenggara.",
+          "The event key is not set on the server. Please contact the host.",
           503,
           { field: "password" },
         );
@@ -118,7 +118,7 @@ export async function POST(request: Request) {
       // apakah formatnya sudah benar. Respons lama tidak diubah sama sekali.
       logServerEvent("invite_password_rejected", { reason: check.reason });
       return errorResponse(
-        "Kunci belum cocok. Masukkan tanggal lahir penyelenggara dengan format DD.MM.YYYY atau DD-MM-YYYY.",
+        "That key doesn't match. Enter the host's birthday as DD.MM.YYYY or DD-MM-YYYY.",
         403,
         { field: "password", remaining: pairLimit.remaining },
       );
@@ -140,27 +140,27 @@ export async function POST(request: Request) {
 
     case "invalid_token":
       return errorResponse(
-        "Link undangan sudah tidak berlaku. Mungkin sudah diganti atau dinonaktifkan.",
+        "This invitation link is no longer valid. It may have been replaced or deactivated.",
         404,
         { code: "invalid_token" },
       );
 
     case "deadline_passed":
       return errorResponse(
-        "Batas waktu RSVP sudah lewat, jadi jawaban tidak bisa diubah lagi.",
+        "The RSVP deadline has passed, so answers can no longer be changed.",
         409,
         { code: "deadline_passed" },
       );
 
     case "password_required":
-      return errorResponse("Kunci untuk ikut acara wajib diisi.", 403, { field: "password" });
+      return errorResponse("The key to join is required.", 403, { field: "password" });
 
     default:
-      return errorResponse("Gagal menyimpan jawaban. Coba lagi sebentar.", 500);
+      return errorResponse("Failed to save your answer. Please try again shortly.", 500);
   }
 }
 
 /** Metode lain ditolak eksplisit; mutasi hanya lewat POST. */
 export async function GET() {
-  return errorResponse("Gunakan POST.", 405);
+  return errorResponse("Use POST.", 405);
 }

@@ -1,29 +1,29 @@
 -- ============================================================
--- SETUP SUPABASE — LANGKAH 1 dari 2
+-- SUPABASE SETUP — STEP 1 of 2
 --
--- Paste SELURUH isi file ini ke Supabase SQL Editor, lalu Run.
--- Aman dijalankan berulang kali (idempoten).
+-- Paste this ENTIRE file into the Supabase SQL Editor, then Run.
+-- Safe to run more than once (idempotent).
 --
--- Gabungan dari supabase/migrations/0001_init.sql + 0002_seed.sql
+-- Combines supabase/migrations/0001_init.sql + 0002_seed.sql
 -- ============================================================
 
 -- =============================================================================
--- BIRTHDAY://PROTOCOL — skema awal
+-- BIRTHDAY://PROTOCOL — initial schema
 --
--- Prinsip keamanan:
---   * RLS aktif pada SEMUA tabel di schema public.
---   * anon dan authenticated non-admin tidak punya akses baca/tulis ke data
---     tamu, RSVP, rate limit, maupun allowlist admin.
---   * Akses aplikasi dilakukan dari modul server memakai service role, SETELAH
---     otorisasi (token undangan valid, atau sesi admin + allowlist).
---   * Fungsi SECURITY DEFINER dicabut dari PUBLIC/anon/authenticated dan hanya
---     diberikan ke service_role.
+-- Security principles:
+--   * RLS is enabled on ALL tables in the public schema.
+--   * anon and non-admin authenticated roles have no read/write access to guest,
+--     RSVP, rate limit, or admin allowlist data.
+--   * Application access happens from server modules using the service role, AFTER
+--     authorization (a valid invite token, or an admin session + allowlist).
+--   * SECURITY DEFINER functions are revoked from PUBLIC/anon/authenticated and
+--     granted only to service_role.
 -- =============================================================================
 
 create extension if not exists "pgcrypto";
 
 -- -----------------------------------------------------------------------------
--- Enum status RSVP. Nilai di luar daftar ini ditolak oleh database.
+-- RSVP status enum. Values outside this list are rejected by the database.
 -- -----------------------------------------------------------------------------
 do $$
 begin
@@ -34,7 +34,7 @@ end
 $$;
 
 -- -----------------------------------------------------------------------------
--- Trigger updated_at
+-- updated_at trigger
 -- -----------------------------------------------------------------------------
 create or replace function public.touch_updated_at()
 returns trigger
@@ -64,7 +64,7 @@ create table if not exists public.events (
   rsvp_deadline timestamptz,
   created_at    timestamptz not null default now(),
   updated_at    timestamptz not null default now(),
-  -- Deadline tidak boleh sesudah waktu mulai acara bila keduanya diisi.
+  -- The deadline must not be after the event start time when both are set.
   constraint events_deadline_before_start
     check (event_date is null or rsvp_deadline is null or rsvp_deadline <= event_date)
 );
@@ -77,8 +77,8 @@ create trigger events_touch_updated_at
 -- -----------------------------------------------------------------------------
 -- guests
 --
--- token_hash menyimpan SHA-256 hex dari token mentah. Token mentah TIDAK pernah
--- masuk database, jadi link tidak dapat ditampilkan ulang setelah dibuat.
+-- token_hash stores the SHA-256 hex of the raw token. The raw token NEVER enters
+-- the database, so a link cannot be displayed again after it is created.
 -- -----------------------------------------------------------------------------
 create table if not exists public.guests (
   id         uuid primary key default gen_random_uuid(),
@@ -102,9 +102,9 @@ create trigger guests_touch_updated_at
 -- -----------------------------------------------------------------------------
 -- rsvps
 --
--- UNIQUE pada guest_id menjamin satu undangan = maksimal satu respons aktif.
--- Tidak ada kolom guest_count / +1: kapasitas selalu satu orang.
--- Tamu yang belum menjawab tidak memiliki baris di sini.
+-- UNIQUE on guest_id guarantees one invitation = at most one active response.
+-- There is no guest_count / +1 column: capacity is always one person.
+-- Guests who have not answered have no row here.
 -- -----------------------------------------------------------------------------
 create table if not exists public.rsvps (
   id           uuid primary key default gen_random_uuid(),
@@ -124,10 +124,10 @@ create trigger rsvps_touch_updated_at
   for each row execute function public.touch_updated_at();
 
 -- -----------------------------------------------------------------------------
--- admin_users — allowlist admin.
+-- admin_users — the admin allowlist.
 --
--- Diisi lewat SQL oleh operator tepercaya. Tidak ada policy insert/update,
--- sehingga tidak ada jalur dari browser untuk menjadikan diri sendiri admin.
+-- Populated via SQL by a trusted operator. There is no insert/update policy,
+-- so there is no path from the browser to make yourself an admin.
 -- -----------------------------------------------------------------------------
 create table if not exists public.admin_users (
   user_id    uuid primary key references auth.users (id) on delete cascade,
@@ -136,10 +136,10 @@ create table if not exists public.admin_users (
 );
 
 -- -----------------------------------------------------------------------------
--- rate_limits — limiter persisten (cocok untuk serverless).
+-- rate_limits — persistent limiter (suitable for serverless).
 --
--- `bucket` adalah SHA-256 dari (nama aturan | IP | token hash), jadi tidak ada
--- IP mentah atau token yang tersimpan di sini.
+-- `bucket` is the SHA-256 of (rule name | IP | token hash), so no raw IP or
+-- token is stored here.
 -- -----------------------------------------------------------------------------
 create table if not exists public.rate_limits (
   bucket       text primary key check (bucket ~ '^[0-9a-f]{64}$'),
@@ -165,13 +165,13 @@ alter table public.rsvps       force row level security;
 alter table public.admin_users force row level security;
 alter table public.rate_limits force row level security;
 
--- Bersihkan policy lama agar migrasi idempoten.
+-- Drop old policies so the migration stays idempotent.
 drop policy if exists events_admin_select on public.events;
 drop policy if exists guests_admin_select on public.guests;
 drop policy if exists rsvps_admin_select  on public.rsvps;
 drop policy if exists admin_users_self_select on public.admin_users;
 
--- Helper: apakah pemanggil saat ini admin yang ter-allowlist?
+-- Helper: is the current caller an allowlisted admin?
 create or replace function public.is_admin()
 returns boolean
 language sql
@@ -184,8 +184,8 @@ as $$
   );
 $$;
 
--- HANYA baca, HANYA untuk admin ter-allowlist. Semua mutasi berjalan lewat
--- modul server (service role) yang sudah mengotorisasi lebih dulu.
+-- READ ONLY, and ONLY for allowlisted admins. All mutations go through server
+-- modules (service role) that have already authorized the caller.
 create policy events_admin_select on public.events
   for select to authenticated using (public.is_admin());
 
@@ -198,19 +198,19 @@ create policy rsvps_admin_select on public.rsvps
 create policy admin_users_self_select on public.admin_users
   for select to authenticated using (user_id = auth.uid());
 
--- Tidak ada policy apa pun untuk anon, dan tidak ada policy untuk
--- rate_limits — artinya anon/authenticated tidak bisa membacanya sama sekali.
+-- There is no policy at all for anon, and none for rate_limits — meaning
+-- anon/authenticated cannot read it whatsoever.
 
 -- =============================================================================
 -- RPC: submit_rsvp
 --
--- Validasi + penulisan dalam SATU transaksi dengan row lock pada guest:
---   * token_hash harus ada dan is_active true  -> invalid_token
---   * deadline (bila diisi) belum lewat        -> deadline_passed
---   * status 'attending' wajib p_password_verified -> password_required
--- Lalu upsert atomik berdasarkan guest_id.
+-- Validation + write in ONE transaction with a row lock on the guest:
+--   * token_hash must exist and is_active must be true -> invalid_token
+--   * the deadline (if set) has not passed          -> deadline_passed
+--   * status 'attending' requires p_password_verified -> password_required
+-- Then an atomic upsert keyed on guest_id.
 --
--- responded_at mencatat respons PERTAMA; updated_at mencatat perubahan terakhir.
+-- responded_at records the FIRST response; updated_at records the last change.
 -- =============================================================================
 create or replace function public.submit_rsvp(
   p_token_hash       text,
@@ -232,8 +232,8 @@ begin
     return jsonb_build_object('code', 'invalid_token');
   end if;
 
-  -- Row lock: rotasi/nonaktifkan link yang berjalan bersamaan harus menunggu,
-  -- sehingga keputusan "aktif" tidak bisa basi saat kita menulis.
+  -- Row lock: a concurrent link rotation/deactivation must wait, so the
+  -- "active" decision cannot go stale while we write.
   select g.* into v_guest
   from public.guests g
   where g.token_hash = p_token_hash
@@ -251,8 +251,8 @@ begin
     return jsonb_build_object('code', 'deadline_passed');
   end if;
 
-  -- Kunci "ikut acara" hanya berlaku untuk attending. Tanpa flag terverifikasi
-  -- dari server, attending ditolak walaupun UI dilewati.
+  -- The "join" key applies only to attending. Without a server-verified flag,
+  -- attending is rejected even if the UI is bypassed.
   if p_status = 'attending' and coalesce(p_password_verified, false) is not true then
     return jsonb_build_object('code', 'password_required');
   end if;
@@ -278,13 +278,13 @@ $$;
 -- =============================================================================
 -- RPC: consume_rate_limit / reset_rate_limit
 --
--- Window tetap (fixed window). Satu UPSERT atomik; bila window sudah lewat,
--- counter direset dalam statement yang sama.
+-- Fixed window. One atomic UPSERT; if the window has elapsed, the counter is
+-- reset within the same statement.
 --
--- Memakai clock_timestamp() (waktu nyata), BUKAN now() yang membeku selama satu
--- transaksi. Dengan begitu kedaluwarsa window tetap benar walau beberapa
--- pemeriksaan terjadi dalam satu transaksi.
--- p_increment = 0 berarti hanya memeriksa tanpa menambah.
+-- Uses clock_timestamp() (wall clock), NOT now() which is frozen for the whole
+-- transaction. That keeps window expiry correct even when several checks happen
+-- inside a single transaction.
+-- p_increment = 0 means check only, without incrementing.
 -- =============================================================================
 create or replace function public.consume_rate_limit(
   p_bucket         text,
@@ -302,10 +302,10 @@ declare
   v_expires timestamptz;
 begin
   if p_bucket is null or p_bucket !~ '^[0-9a-f]{64}$' then
-    raise exception 'bucket tidak valid';
+    raise exception 'invalid bucket';
   end if;
   if p_limit < 1 or p_window_seconds < 1 then
-    raise exception 'parameter limiter tidak valid';
+    raise exception 'invalid limiter parameters';
   end if;
 
   insert into public.rate_limits (bucket, count, window_start, expires_at)
@@ -353,8 +353,8 @@ begin
 end;
 $$;
 
--- Cleanup bucket kedaluwarsa. Jalankan berkala (pg_cron / Supabase scheduled
--- function); limiter tetap benar tanpa ini, tabelnya saja yang tumbuh.
+-- Clean up expired buckets. Run periodically (pg_cron / a Supabase scheduled
+-- function); the limiter stays correct without it, only the table grows.
 create or replace function public.purge_expired_rate_limits()
 returns integer
 language plpgsql
@@ -373,8 +373,8 @@ $$;
 -- =============================================================================
 -- GRANT / REVOKE
 --
--- Default PostgreSQL memberikan EXECUTE ke PUBLIC untuk fungsi baru. Itu dicabut
--- di sini supaya anon/authenticated tidak dapat memanggil fungsi sensitif.
+-- PostgreSQL grants EXECUTE to PUBLIC for new functions by default. That is
+-- revoked here so anon/authenticated cannot call sensitive functions.
 -- =============================================================================
 revoke all on function public.submit_rsvp(text, public.rsvp_status, text, boolean) from public, anon, authenticated;
 revoke all on function public.consume_rate_limit(text, integer, integer, integer) from public, anon, authenticated;
@@ -387,12 +387,12 @@ grant execute on function public.consume_rate_limit(text, integer, integer, inte
 grant execute on function public.reset_rate_limit(text) to service_role;
 grant execute on function public.purge_expired_rate_limits() to service_role;
 
--- is_admin() dipakai di dalam policy, jadi authenticated perlu memanggilnya.
+-- is_admin() is used inside policies, so authenticated must be able to call it.
 revoke all on function public.is_admin() from public, anon;
 grant execute on function public.is_admin() to authenticated, service_role;
 
--- Hak tabel: anon tidak mendapat apa pun. authenticated hanya SELECT, dan RLS
--- masih mempersempitnya ke admin ter-allowlist.
+-- Table privileges: anon gets nothing. authenticated gets SELECT only, and RLS
+-- still narrows that to allowlisted admins.
 revoke all on all tables in schema public from anon;
 revoke all on public.rate_limits from anon, authenticated;
 revoke all on public.admin_users from anon;
@@ -404,12 +404,12 @@ grant select on public.admin_users to authenticated;
 
 
 -- =============================================================================
--- Seed placeholder untuk satu acara.
+-- Placeholder seed for a single event.
 --
--- Tidak ada tanggal atau lokasi yang dikarang: event_date dan rsvp_deadline
--- sengaja NULL, dan teks lain memakai placeholder dalam tanda siku yang jelas
--- perlu diganti penyelenggara lewat /admin/dashboard -> Event settings.
--- Idempoten: hanya menyisipkan bila tabel events masih kosong.
+-- No date or location is invented: event_date and rsvp_deadline are deliberately
+-- NULL, and the remaining text uses clearly bracketed placeholders the host is
+-- expected to replace via /admin/dashboard -> Event settings.
+-- Idempotent: inserts only while the events table is still empty.
 -- =============================================================================
 insert into public.events (
   title, host_name, event_date, timezone, location_name,
@@ -417,12 +417,12 @@ insert into public.events (
 )
 select
   'Birthday Protocol',
-  '[Nama penyelenggara]',
+  '[Host name]',
   null,
   'Europe/Berlin',
-  '[Lokasi acara]',
+  '[Event location]',
   null,
   '[Dress code]',
-  'Detail misi akan segera diumumkan.',
+  'Mission details will be announced soon.',
   null
 where not exists (select 1 from public.events);

@@ -43,7 +43,7 @@ export async function listGuests(eventId: string): Promise<GuestListResult> {
 
   if (error) {
     logServerEvent("guest_list_failed", { code: error.code ?? "unknown" });
-    throw new Error("Gagal memuat daftar tamu.");
+    throw new Error("Failed to load the guest list.");
   }
 
   const guests: GuestSummaryRow[] = (data ?? []).map((row) => {
@@ -102,10 +102,10 @@ export async function createGuest(
     if (!error && data) return { id: data.id as string, token };
     if (error && error.code !== "23505") {
       logServerEvent("guest_create_failed", { code: error.code ?? "unknown" });
-      throw new Error("Gagal menyimpan tamu.");
+      throw new Error("Failed to save the guest.");
     }
   }
-  throw new Error("Gagal membuat token unik. Coba lagi.");
+  throw new Error("Could not generate a unique token. Please try again.");
 }
 
 /**
@@ -132,10 +132,10 @@ export async function rotateGuestToken(
     if (!error && !data) return null; // guest tidak ada di acara ini
     if (error && error.code !== "23505") {
       logServerEvent("guest_rotate_failed", { code: error.code ?? "unknown" });
-      throw new Error("Gagal membuat ulang link.");
+      throw new Error("Failed to regenerate the link.");
     }
   }
-  throw new Error("Gagal membuat token unik. Coba lagi.");
+  throw new Error("Could not generate a unique token. Please try again.");
 }
 
 /** Mengaktifkan/menonaktifkan link. Riwayat RSVP tetap tersimpan. */
@@ -154,7 +154,7 @@ export async function setGuestActive(
 
   if (error) {
     logServerEvent("guest_set_active_failed", { code: error.code ?? "unknown" });
-    throw new Error("Gagal mengubah status undangan.");
+    throw new Error("Failed to change the invitation status.");
   }
   return Boolean(data);
 }
@@ -185,8 +185,8 @@ export async function updateEvent(
     // 23514 = check constraint, mis. deadline sesudah waktu mulai acara.
     throw new Error(
       error.code === "23514"
-        ? "Nilai ditolak database. Pastikan batas RSVP tidak melewati waktu mulai acara."
-        : "Gagal menyimpan pengaturan acara.",
+        ? "Rejected by the database. Make sure the RSVP deadline is not after the event start time."
+        : "Failed to save event settings.",
     );
   }
   return data as EventRecord;

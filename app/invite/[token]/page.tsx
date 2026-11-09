@@ -16,8 +16,8 @@ export const runtime = "nodejs";
 
 /** Metadata netral: tanpa nama tamu, tanpa detail acara, noindex. */
 export const metadata: Metadata = {
-  title: "Undangan personal · BIRTHDAY://PROTOCOL",
-  description: "Undangan personal.",
+  title: "Personal invitation · BIRTHDAY://PROTOCOL",
+  description: "A personal invitation.",
   robots: { index: false, follow: false, nocache: true },
 };
 
@@ -48,11 +48,11 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
     return (
       <main className="mx-auto w-full max-w-md px-4 py-20 sm:px-6">
         <div className="panel px-5 py-6 text-center">
-          <p className="label-mono text-warn">429 · terlalu banyak permintaan</p>
-          <h1 className="mt-2 text-lg font-semibold text-ink">Tunggu sebentar</h1>
+          <p className="label-mono text-warn">429 · too many requests</p>
+          <h1 className="mt-2 text-lg font-semibold text-ink">Please wait a moment</h1>
           <p className="mt-2 text-sm leading-relaxed text-ink-muted">
-            Undangan ini dibuka terlalu sering dari jaringan yang sama. Coba muat ulang dalam satu
-            menit.
+            This invitation has been opened too often from the same network. Try reloading in a
+            minute.
           </p>
         </div>
       </main>

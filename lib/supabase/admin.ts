@@ -13,8 +13,8 @@ let cached: SupabaseClient | null = null;
 export class SupabaseNotConfiguredError extends Error {
   constructor() {
     super(
-      "Supabase belum dikonfigurasi. Isi SUPABASE_URL, " +
-        "SUPABASE_PUBLISHABLE_KEY, dan SUPABASE_SERVICE_ROLE_KEY di .env.local.",
+      "Supabase is not configured. Set SUPABASE_URL, " +
+        "SUPABASE_PUBLISHABLE_KEY and SUPABASE_SERVICE_ROLE_KEY in .env.local.",
     );
     this.name = "SupabaseNotConfiguredError";
   }

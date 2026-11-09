@@ -13,7 +13,7 @@ export const revalidate = 0;
 export const runtime = "nodejs";
 
 export const metadata: Metadata = {
-  title: "Dashboard penyelenggara · BIRTHDAY://PROTOCOL",
+  title: "Host dashboard · BIRTHDAY://PROTOCOL",
   robots: { index: false, follow: false, nocache: true },
 };
 
@@ -36,15 +36,15 @@ export default async function AdminDashboardPage() {
     return (
       <main className="mx-auto flex min-h-screen w-full max-w-lg flex-col justify-center px-4 py-16 sm:px-6">
         <Panel className="px-5 py-6">
-          <p className="label-mono text-warn">migration belum lengkap</p>
-          <h1 className="mt-2 text-lg font-semibold text-ink">Data acara belum ada</h1>
+          <p className="label-mono text-warn">migration incomplete</p>
+          <h1 className="mt-2 text-lg font-semibold text-ink">No event data yet</h1>
           <p className="mt-2 text-sm leading-relaxed text-ink-muted">
-            Tabel <code className="font-mono text-cyan-neon">events</code> masih kosong. Jalankan{" "}
-            <code className="font-mono text-cyan-neon">supabase/migrations/0002_seed.sql</code> di
-            Supabase SQL Editor, lalu muat ulang halaman ini.
+            The <code className="font-mono text-cyan-neon">events</code> table is still empty. Run{" "}
+            <code className="font-mono text-cyan-neon">supabase/migrations/0002_seed.sql</code> in the
+            Supabase SQL Editor, then reload this page.
           </p>
           <a href="/admin/dashboard" className={buttonClass("ghost", "mt-5")}>
-            Muat ulang
+            Reload
           </a>
         </Panel>
       </main>

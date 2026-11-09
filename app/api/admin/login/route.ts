@@ -16,7 +16,7 @@ const loginSchema = z
   .strict();
 
 /** Pesan tunggal: tidak membocorkan apakah email terdaftar atau bukan admin. */
-const GENERIC_ERROR = "Email atau password salah, atau akun ini bukan admin.";
+const GENERIC_ERROR = "Incorrect email or password, or this account is not an admin.";
 
 /**
  * POST /api/admin/login — login admin lewat Supabase Auth, dijalankan di server
@@ -25,11 +25,11 @@ const GENERIC_ERROR = "Email atau password salah, atau akun ini bukan admin.";
  */
 export async function POST(request: Request) {
   if (!verifySameOrigin(request)) {
-    return errorResponse("Origin tidak dikenal.", 403);
+    return errorResponse("Unrecognized origin.", 403);
   }
   if (!isServiceClientConfigured()) {
     return errorResponse(
-      "Supabase belum dikonfigurasi. Lihat README bagian Environment.",
+      "Supabase is not configured. See the Environment section in the README.",
       503,
     );
   }
@@ -44,14 +44,14 @@ export async function POST(request: Request) {
   try {
     raw = await readJsonBody(request);
   } catch (cause) {
-    return errorResponse(cause instanceof BodyError ? cause.message : "Body tidak valid.", 400);
+    return errorResponse(cause instanceof BodyError ? cause.message : "Invalid request body.", 400);
   }
 
   const parsed = loginSchema.safeParse(raw);
   if (!parsed.success) return errorResponse(GENERIC_ERROR, 400);
 
   const supabase = await createSupabaseServerClient();
-  if (!supabase) return errorResponse("Supabase belum dikonfigurasi.", 503);
+  if (!supabase) return errorResponse("Supabase is not configured.", 503);
 
   const { data, error } = await supabase.auth.signInWithPassword({
     email: parsed.data.email,

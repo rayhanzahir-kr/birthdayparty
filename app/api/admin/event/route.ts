@@ -16,30 +16,30 @@ export async function PUT(request: Request) {
   try {
     raw = await readJsonBody(request);
   } catch (cause) {
-    return errorResponse(cause instanceof BodyError ? cause.message : "Body tidak valid.", 400);
+    return errorResponse(cause instanceof BodyError ? cause.message : "Invalid request body.", 400);
   }
 
   const parsed = eventSettingsSchema.safeParse(raw);
   if (!parsed.success) {
     const first = parsed.error.issues[0];
-    return errorResponse(first?.message ?? "Data tidak valid.", 400, {
+    return errorResponse(first?.message ?? "Invalid data.", 400, {
       field: first?.path?.[0] ?? null,
     });
   }
 
   if (!isDeadlineConsistent(parsed.data.event_date, parsed.data.rsvp_deadline)) {
-    return errorResponse("Batas RSVP tidak boleh sesudah waktu mulai acara.", 400, {
+    return errorResponse("The RSVP deadline cannot be after the event start time.", 400, {
       field: "rsvp_deadline",
     });
   }
 
   const event = await getPrimaryEvent();
-  if (!event) return errorResponse("Acara belum ada. Jalankan migration seed.", 409);
+  if (!event) return errorResponse("No event found. Run the seed migration.", 409);
 
   try {
     const updated = await updateEvent(event.id, parsed.data);
     return jsonResponse({ ok: true as const, event: updated });
   } catch (cause) {
-    return errorResponse(cause instanceof Error ? cause.message : "Gagal menyimpan.", 500);
+    return errorResponse(cause instanceof Error ? cause.message : "Failed to save.", 500);
   }
 }

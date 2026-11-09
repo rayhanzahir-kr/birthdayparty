@@ -19,16 +19,16 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   if (!guard.ok) return guard.response;
 
   const { id } = await context.params;
-  if (!UUID.test(id)) return errorResponse("Id tamu tidak valid.", 400);
+  if (!UUID.test(id)) return errorResponse("Invalid guest id.", 400);
 
   const event = await getPrimaryEvent();
-  if (!event) return errorResponse("Acara belum ada.", 409);
+  if (!event) return errorResponse("No event found.", 409);
 
   try {
     const rotated = await rotateGuestToken(event.id, id);
-    if (!rotated) return errorResponse("Tamu tidak ditemukan.", 404);
+    if (!rotated) return errorResponse("Guest not found.", 404);
     return jsonResponse({ ok: true as const, inviteUrl: buildInviteUrl(getSiteUrl(), rotated.token) });
   } catch (cause) {
-    return errorResponse(cause instanceof Error ? cause.message : "Gagal rotasi link.", 500);
+    return errorResponse(cause instanceof Error ? cause.message : "Failed to rotate the link.", 500);
   }
 }

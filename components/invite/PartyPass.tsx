@@ -60,37 +60,37 @@ export function PartyPass({
           <Ticket className="size-7 shrink-0 text-cyan-neon" aria-hidden="true" />
         </div>
 
-        <p className="mt-5 label-mono">Nama tamu</p>
+        <p className="mt-5 label-mono">Guest name</p>
         <p className="mt-0.5 text-2xl leading-tight font-semibold tracking-tight text-ink sm:text-3xl">
           {guestName}
         </p>
 
         <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-ok/40 bg-ok/12 px-3 py-1.5 font-mono text-[0.75rem] text-ok">
           <span aria-hidden="true">✓</span>
-          Status: Hadir
+          Status: Attending
         </div>
       </div>
 
       <div className="grid gap-x-5 gap-y-3.5 px-5 pt-5 pb-5 sm:grid-cols-2 sm:px-7 sm:pb-6">
         <PassRow
           icon={<CalendarClock className="size-4" />}
-          label="Tanggal & jam"
+          label="Date & time"
           value={dateText}
           placeholder={!event.event_date}
           note={event.event_date ? event.timezone : undefined}
         />
-        <PassRow icon={<MapPin className="size-4" />} label="Lokasi" value={event.location_name} />
-        <PassRow icon={<UserRound className="size-4" />} label="Kapasitas" value="1 orang" />
+        <PassRow icon={<MapPin className="size-4" />} label="Location" value={event.location_name} />
+        <PassRow icon={<UserRound className="size-4" />} label="Admits" value="1 person" />
         <PassRow
           icon={<UserRound className="size-4" />}
-          label="Penyelenggara"
+          label="Host"
           value={event.host_name}
         />
       </div>
 
       <p className="border-t border-cyan-neon/20 px-5 py-3 text-[0.75rem] leading-relaxed text-ink-faint sm:px-7">
-        Simpan kartu ini dengan screenshot. Kartu berlaku sebagai catatan kehadiran, bukan bukti
-        identitas, dan tidak dipakai untuk check-in di pintu.
+        Save this pass with a screenshot. It serves as a record of attendance, not proof of
+        identity, and isn't used for check-in at the door.
       </p>
     </motion.section>
   );

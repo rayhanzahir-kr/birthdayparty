@@ -3,7 +3,7 @@
  * dalam zona waktu acara — bukan zona waktu perangkat tamu (PRD §5).
  */
 
-export const PLACEHOLDER_DATE = "Belum ditentukan";
+export const PLACEHOLDER_DATE = "To be announced";
 
 /** Validasi nama zona waktu IANA lewat Intl, tanpa daftar hardcoded. */
 export function isValidTimeZone(tz: unknown): tz is string {
@@ -27,14 +27,14 @@ export function formatEventDateTime(iso: string | null, timezone: string): strin
   if (Number.isNaN(date.getTime())) return PLACEHOLDER_DATE;
 
   const tz = safeTimeZone(timezone);
-  const datePart = new Intl.DateTimeFormat("id-ID", {
+  const datePart = new Intl.DateTimeFormat("en-GB", {
     timeZone: tz,
     weekday: "long",
     day: "numeric",
     month: "long",
     year: "numeric",
   }).format(date);
-  const timePart = new Intl.DateTimeFormat("id-ID", {
+  const timePart = new Intl.DateTimeFormat("en-GB", {
     timeZone: tz,
     hour: "2-digit",
     minute: "2-digit",
@@ -51,7 +51,7 @@ export function formatShortDateTime(iso: string | null, timezone: string): strin
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return PLACEHOLDER_DATE;
   const tz = safeTimeZone(timezone);
-  return new Intl.DateTimeFormat("id-ID", {
+  return new Intl.DateTimeFormat("en-GB", {
     timeZone: tz,
     day: "2-digit",
     month: "short",

@@ -24,11 +24,11 @@ export function PullRequestHeader({
         <StatusPill tone={state.tone} glyph={state.glyph}>
           {state.label}
         </StatusPill>
-        <span className="label-mono">#1 · satu slot</span>
+        <span className="label-mono">#1 · one slot</span>
       </div>
 
       <h2 className="mt-3 text-lg leading-snug font-semibold tracking-tight text-ink sm:text-xl">
-        Konfirmasi kehadiran {guestName}
+        Confirm attendance for {guestName}
       </h2>
 
       <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[0.75rem] text-ink-faint">
@@ -38,9 +38,8 @@ export function PullRequestHeader({
       </p>
 
       <p className="mt-3 rounded-lg border border-edge-bright bg-void-2/60 px-3.5 py-2.5 text-[0.8125rem] leading-relaxed text-ink-muted">
-        <span className="text-ink">1 undangan · 1 orang · tanpa +1.</span> Artinya: undangan ini
-        hanya untuk kamu, dan tidak bisa menambah teman. Pilih jawabanmu di bawah, lalu tekan
-        simpan.
+        <span className="text-ink">1 invitation · 1 person · no +1.</span> Meaning: this invite is
+        just for you and can't bring a guest along. Pick your answer below, then hit save.
       </p>
     </div>
   );
@@ -53,13 +52,13 @@ function prState(status: RsvpStatus | null): {
 } {
   switch (status) {
     case "attending":
-      return { label: "Merged · kamu ikut", glyph: "✓", tone: "ok" };
+      return { label: "Merged · you're in", glyph: "✓", tone: "ok" };
     case "maybe":
-      return { label: "Draft · belum pasti", glyph: "◐", tone: "warn" };
+      return { label: "Draft · still unsure", glyph: "◐", tone: "warn" };
     case "declined":
-      return { label: "Closed · tidak hadir", glyph: "✕", tone: "bad" };
+      return { label: "Closed · not attending", glyph: "✕", tone: "bad" };
     default:
-      return { label: "Open · menunggu jawaban", glyph: "○", tone: "idle" };
+      return { label: "Open · awaiting answer", glyph: "○", tone: "idle" };
   }
 }
 
@@ -72,10 +71,10 @@ export function PullRequestTimeline({
   respondedLabel: string | null;
 }) {
   const steps = [
-    { label: "Undangan dibuat penyelenggara", done: true, icon: CircleDot },
-    { label: "Link personal dibuka", done: true, icon: CircleDot },
+    { label: "Invitation created by the host", done: true, icon: CircleDot },
+    { label: "Personal link opened", done: true, icon: CircleDot },
     {
-      label: status ? `Jawaban tersimpan: ${statusText(status)}` : "Menunggu jawaban kamu",
+      label: status ? `Answer saved: ${statusText(status)}` : "Waiting for your answer",
       done: status !== null,
       icon: status === "declined" ? GitPullRequestClosed : status ? GitMerge : GitPullRequest,
     },
@@ -122,7 +121,7 @@ export function PullRequestTimeline({
 }
 
 function statusText(status: RsvpStatus): string {
-  return status === "attending" ? "Hadir" : status === "maybe" ? "Belum pasti" : "Tidak hadir";
+  return status === "attending" ? "Attending" : status === "maybe" ? "Maybe" : "Can't make it";
 }
 
 function slugify(name: string): string {
@@ -132,6 +131,6 @@ function slugify(name: string): string {
       .normalize("NFKD")
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "")
-      .slice(0, 24) || "tamu"
+      .slice(0, 24) || "guest"
   );
 }

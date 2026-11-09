@@ -8,8 +8,8 @@
  */
 
 /** Petunjuk format yang boleh tampil di UI. Tidak mengandung jawaban. */
-export const PASSWORD_HINT = "DD.MM.YYYY atau DD-MM-YYYY";
-export const PASSWORD_LABEL = "Kunci untuk ikut: tanggal lahirku";
+export const PASSWORD_HINT = "DD.MM.YYYY or DD-MM-YYYY";
+export const PASSWORD_LABEL = "Key to join: my birthday";
 
 /** Batas panjang input mentah supaya payload tidak bisa dibesar-besarkan. */
 export const PASSWORD_MAX_RAW_LENGTH = 32;

@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "BIRTHDAY://PROTOCOL",
-  description: "Undangan personal. Buka lewat link yang dikirim penyelenggara.",
+  description: "A personal invitation. Open it with the link your host sent you.",
   robots: { index: false, follow: false },
 };
 
@@ -29,40 +29,40 @@ export default function LandingPage() {
 
       <h1 className="mt-4 text-balance text-4xl leading-[1.05] font-semibold tracking-tight sm:text-5xl md:text-6xl">
         <span className="bg-linear-to-br from-ink via-violet-neon to-cyan-neon bg-clip-text text-transparent">
-          Undangan yang dibuka
+          An invitation opened
         </span>
         <br />
-        <span className="text-ink">lewat link personal.</span>
+        <span className="text-ink">with a personal link.</span>
       </h1>
 
       <p className="mt-5 max-w-prose text-pretty text-base leading-relaxed text-ink-muted sm:text-lg">
-        Setiap tamu punya link sendiri. Tidak ada daftar tamu di halaman ini, tidak ada akun yang
-        perlu dibuat, dan tidak ada detail acara sebelum link personal dibuka.
+        Every guest gets their own link. No guest list on this page, no account to create, and no
+        event details until a personal link is opened.
       </p>
 
       <Panel className="mt-9 px-5 py-6 sm:px-7">
         <h2 className="flex items-center gap-2.5 text-base font-semibold text-ink">
           <Link2 className="size-4 shrink-0 text-cyan-neon" aria-hidden="true" />
-          Cara membuka undangan
+          How to open your invitation
         </h2>
         <ol className="mt-4 space-y-3 text-[0.9375rem] leading-relaxed text-ink-muted">
           <Step n={1}>
-            Cari pesan dari penyelenggara yang berisi link berawalan{" "}
+            Find the message from your host containing a link that starts with{" "}
             <code className="rounded bg-void-2 px-1.5 py-0.5 font-mono text-[0.8125rem] text-cyan-neon">
               /invite/
             </code>
             .
           </Step>
-          <Step n={2}>Buka link itu. Nama dan detail acara langsung muncul tanpa password.</Step>
+          <Step n={2}>Open it. Your name and the event details appear right away, no password.</Step>
           <Step n={3}>
-            Pilih Hadir, Belum pasti, atau Tidak hadir. Khusus Hadir, ada satu kunci tambahan yang
-            sudah diberitahu penyelenggara.
+            Choose Attending, Maybe, or Can't make it. For Attending only, there's one extra key
+            your host has told you.
           </Step>
         </ol>
 
         <p className="mt-5 rounded-lg border border-edge-bright bg-void-2/60 px-3.5 py-3 text-[0.8125rem] leading-relaxed text-ink-faint">
-          Belum menerima link, atau link-nya tidak bisa dibuka? Hubungi penyelenggara langsung.
-          Halaman ini tidak bisa mencari atau membuatkan undangan.
+          Haven't received a link, or it won't open? Contact your host directly. This page cannot
+          look up or create invitations.
         </p>
       </Panel>
 
@@ -75,19 +75,19 @@ export default function LandingPage() {
       <div className="mt-8 flex flex-wrap gap-3">
         <Link href="/demo" className={buttonClass("ghost")}>
           <Sparkles className="size-4" aria-hidden="true" />
-          Lihat demo tampilan
+          See a visual demo
         </Link>
         <Link href="/admin" className={buttonClass("subtle")}>
           <LayoutDashboard className="size-4" aria-hidden="true" />
-          Masuk sebagai penyelenggara
+          Sign in as host
         </Link>
       </div>
 
       <p className="mt-10 flex items-start gap-2 font-mono text-[0.6875rem] leading-relaxed text-ink-faint">
         <ShieldCheck className="mt-px size-3.5 shrink-0" aria-hidden="true" />
-        Link undangan berfungsi seperti kunci: siapa pun yang memegangnya bisa membaca undangan dan
-        mengubah satu jawaban RSVP. Sistem membatasi satu slot per undangan, bukan memverifikasi
-        identitas orang.
+        An invitation link works like a key: anyone holding it can read the invitation and change
+        one RSVP answer. The system limits one slot per invitation; it does not verify a person's
+        identity.
       </p>
     </main>
   );

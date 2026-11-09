@@ -20,10 +20,10 @@ const jetbrains = JetBrains_Mono({
  */
 export const metadata: Metadata = {
   title: "BIRTHDAY://PROTOCOL",
-  description: "Undangan personal. Buka lewat link yang dikirim penyelenggara.",
+  description: "A personal invitation. Open it with the link your host sent you.",
   robots: { index: false, follow: false, nocache: true, googleBot: { index: false, follow: false } },
   referrer: "no-referrer",
-  openGraph: { title: "BIRTHDAY://PROTOCOL", description: "Undangan personal.", images: [] },
+  openGraph: { title: "BIRTHDAY://PROTOCOL", description: "A personal invitation.", images: [] },
   icons: { icon: "/icon.svg" },
 };
 
@@ -35,7 +35,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="id" className={`${outfit.variable} ${jetbrains.variable}`}>
+    <html lang="en" className={`${outfit.variable} ${jetbrains.variable}`}>
       <body className="antialiased">{children}</body>
     </html>
   );

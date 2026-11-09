@@ -27,7 +27,7 @@ export function CopyField({ value, whatsappText }: { value: string; whatsappText
     input?.select();
 
     try {
-      if (!navigator.clipboard?.writeText) throw new Error("clipboard tidak tersedia");
+      if (!navigator.clipboard?.writeText) throw new Error("clipboard unavailable");
       await navigator.clipboard.writeText(value);
       setState("copied");
     } catch {
@@ -46,7 +46,7 @@ export function CopyField({ value, whatsappText }: { value: string; whatsappText
     <div className="flex flex-col gap-2">
       <div className="flex flex-col gap-2 sm:flex-row">
         <label className="sr-only" htmlFor="invite-link-output">
-          Link undangan
+          Invitation link
         </label>
         <input
           ref={inputRef}
@@ -59,11 +59,11 @@ export function CopyField({ value, whatsappText }: { value: string; whatsappText
         <button type="button" onClick={copy} className={buttonClass("ghost", "shrink-0")}>
           {state === "copied" ? (
             <>
-              <Check className="size-4" aria-hidden="true" /> Tersalin
+              <Check className="size-4" aria-hidden="true" /> Copied
             </>
           ) : (
             <>
-              <Copy className="size-4" aria-hidden="true" /> Salin
+              <Copy className="size-4" aria-hidden="true" /> Copy
             </>
           )}
         </button>
@@ -72,12 +72,12 @@ export function CopyField({ value, whatsappText }: { value: string; whatsappText
       <div aria-live="polite" className="min-h-4">
         {state === "manual" ? (
           <p className="font-mono text-[0.6875rem] text-warn">
-            Clipboard tidak tersedia di browser ini. Teks sudah diseleksi — tekan Cmd/Ctrl + C untuk
-            menyalin manual.
+            Clipboard is unavailable in this browser. The text is selected — press Cmd/Ctrl + C to
+            copy it manually.
           </p>
         ) : null}
         {state === "copied" ? (
-          <p className="font-mono text-[0.6875rem] text-ok">Link tersalin ke clipboard.</p>
+          <p className="font-mono text-[0.6875rem] text-ok">Link copied to clipboard.</p>
         ) : null}
       </div>
 
@@ -89,7 +89,7 @@ export function CopyField({ value, whatsappText }: { value: string; whatsappText
           className={buttonClass("subtle", "self-start")}
         >
           <MessageCircle className="size-4" aria-hidden="true" />
-          Bagikan lewat WhatsApp
+          Share via WhatsApp
         </a>
       ) : null}
     </div>

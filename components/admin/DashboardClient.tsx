@@ -67,12 +67,12 @@ export function DashboardClient({
         | ({ ok?: boolean; error?: string } & DashboardData)
         | null;
       if (!response.ok || !payload?.ok) {
-        setListError(payload?.error ?? "Gagal memuat daftar tamu.");
+        setListError(payload?.error ?? "Failed to load the guest list.");
       } else {
         setData({ guests: payload.guests, summary: payload.summary });
       }
     } catch {
-      setListError("Jaringan bermasalah. Daftar tamu belum diperbarui.");
+      setListError("Network trouble. The guest list was not refreshed.");
     }
     setListLoading(false);
   }, []);
@@ -82,7 +82,7 @@ export function DashboardClient({
     if (adding) return;
     const name = newName.trim();
     if (name.length === 0) {
-      setAddError("Nama tamu wajib diisi.");
+      setAddError("Guest name is required.");
       return;
     }
     setAdding(true);
@@ -100,7 +100,7 @@ export function DashboardClient({
         | null;
 
       if (!response.ok || !payload?.ok || !payload.inviteUrl) {
-        setAddError(payload?.error ?? "Gagal menambah tamu.");
+        setAddError(payload?.error ?? "Failed to add the guest.");
         setAdding(false);
         return;
       }
@@ -109,7 +109,7 @@ export function DashboardClient({
       setNewName("");
       await refresh();
     } catch {
-      setAddError("Jaringan bermasalah dan tamu belum ditambahkan. Nama masih tersimpan di form.");
+      setAddError("Network trouble — the guest was not added. The name is still in the form.");
     }
     setAdding(false);
   }
@@ -117,10 +117,10 @@ export function DashboardClient({
   async function rotate(guest: GuestSummaryRow) {
     // Konfirmasi eksplisit: rotasi mematikan link lama secara permanen.
     const confirmed = window.confirm(
-      `Buat ulang link untuk "${guest.name}"?\n\n` +
-        "Link lama langsung TIDAK BERLAKU dan tidak bisa dikembalikan. " +
-        "Jawaban RSVP yang sudah ada tetap tersimpan.\n\n" +
-        "Pastikan kamu siap mengirim link baru ke tamu ini.",
+      `Regenerate the link for "${guest.name}"?\n\n` +
+        "The old link stops working IMMEDIATELY and cannot be restored. " +
+        "Any existing RSVP answer is kept.\n\n" +
+        "Make sure you are ready to send the new link to this guest.",
     );
     if (!confirmed) return;
 
@@ -136,13 +136,13 @@ export function DashboardClient({
         | { ok?: boolean; error?: string; inviteUrl?: string }
         | null;
       if (!response.ok || !payload?.ok || !payload.inviteUrl) {
-        setListError(payload?.error ?? "Gagal membuat ulang link.");
+        setListError(payload?.error ?? "Failed to regenerate the link.");
       } else {
         setReveal({ name: guest.name, url: payload.inviteUrl, kind: "rotated" });
         await refresh();
       }
     } catch {
-      setListError("Jaringan bermasalah. Link belum dibuat ulang.");
+      setListError("Network trouble. The link was not regenerated.");
     }
     setBusyGuestId(null);
   }
@@ -151,9 +151,9 @@ export function DashboardClient({
     const next = !guest.is_active;
     if (next === false) {
       const confirmed = window.confirm(
-        `Nonaktifkan link untuk "${guest.name}"?\n\n` +
-          "Link ini akan ditolak saat dibuka maupun saat menyimpan jawaban. " +
-          "Riwayat RSVP tetap tersimpan dan link bisa diaktifkan lagi nanti.",
+        `Disable the link for "${guest.name}"?\n\n` +
+          "It will be rejected both when opened and when saving an answer. " +
+          "The RSVP history is kept and the link can be re-enabled later.",
       );
       if (!confirmed) return;
     }
@@ -170,12 +170,12 @@ export function DashboardClient({
         | { ok?: boolean; error?: string }
         | null;
       if (!response.ok || !payload?.ok) {
-        setListError(payload?.error ?? "Gagal mengubah status undangan.");
+        setListError(payload?.error ?? "Failed to change the invitation status.");
       } else {
         await refresh();
       }
     } catch {
-      setListError("Jaringan bermasalah. Status undangan belum berubah.");
+      setListError("Network trouble. The invitation status did not change.");
     }
     setBusyGuestId(null);
   }
@@ -204,18 +204,18 @@ export function DashboardClient({
           {adminEmail ? <p className="label-mono mt-1 normal-case">{adminEmail}</p> : null}
         </div>
         <button type="button" onClick={logout} className={buttonClass("ghost")}>
-          <LogOut className="size-4" aria-hidden="true" /> Logout
+          <LogOut className="size-4" aria-hidden="true" /> Sign out
         </button>
       </header>
 
       {/* --- Ringkasan status ------------------------------------------- */}
-      <section aria-label="Ringkasan status" className="mt-7 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-        <Stat label="Total tamu" value={summary.total} note={`${summary.active} link aktif`} />
-        <Stat label="Belum menjawab" value={summary.pending} tone="idle" />
-        <Stat label="Hadir" value={summary.attending} tone="ok" />
-        <Stat label="Belum pasti" value={summary.maybe} tone="warn" />
-        <Stat label="Tidak hadir" value={summary.declined} tone="bad" />
-        <Stat label="Link nonaktif" value={summary.inactive} tone="idle" />
+      <section aria-label="Status summary" className="mt-7 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+        <Stat label="Total guests" value={summary.total} note={`${summary.active} active links`} />
+        <Stat label="No answer" value={summary.pending} tone="idle" />
+        <Stat label="Attending" value={summary.attending} tone="ok" />
+        <Stat label="Maybe" value={summary.maybe} tone="warn" />
+        <Stat label="Can't make it" value={summary.declined} tone="bad" />
+        <Stat label="Disabled links" value={summary.inactive} tone="idle" />
       </section>
 
       <div className="mt-6 flex flex-col gap-5 sm:gap-6">
@@ -228,8 +228,8 @@ export function DashboardClient({
                 <div className="grow">
                   <Field
                     id="new-guest-name"
-                    label="Nama tamu"
-                    hint={`1–${NAME_MAX_LENGTH} karakter. Nama yang sama boleh dipakai untuk orang berbeda.`}
+                    label="Guest name"
+                    hint={`1–${NAME_MAX_LENGTH} characters. The same name may be used for different people.`}
                     error={addError}
                     required
                   >
@@ -242,7 +242,7 @@ export function DashboardClient({
                       }}
                       maxLength={NAME_MAX_LENGTH}
                       required
-                      placeholder="Nama lengkap tamu"
+                      placeholder="Guest full name"
                       className={inputClass}
                     />
                   </Field>
@@ -254,11 +254,11 @@ export function DashboardClient({
                 >
                   {adding ? (
                     <>
-                      <Spinner /> Membuat…
+                      <Spinner /> Creating…
                     </>
                   ) : (
                     <>
-                      <UserPlus className="size-4" aria-hidden="true" /> Buat undangan
+                      <UserPlus className="size-4" aria-hidden="true" /> Create invitation
                     </>
                   )}
                 </button>
@@ -273,12 +273,12 @@ export function DashboardClient({
             <div className="flex items-center gap-3 border-b border-edge px-4 py-3 sm:px-5">
               <LinkIcon className="size-4 shrink-0 text-cyan-neon" aria-hidden="true" />
               <h2 className="font-mono text-[0.8125rem] text-ink">
-                {reveal.kind === "created" ? "link undangan baru" : "link pengganti"}
+                {reveal.kind === "created" ? "new invitation link" : "replacement link"}
               </h2>
               <button
                 type="button"
                 onClick={() => setReveal(null)}
-                aria-label="Tutup panel link"
+                aria-label="Close link panel"
                 className="tap ml-auto grid place-items-center text-ink-faint hover:text-ink"
               >
                 <X className="size-4" aria-hidden="true" />
@@ -286,20 +286,20 @@ export function DashboardClient({
             </div>
             <div className="px-4 py-4 sm:px-5">
               <p className="text-[0.875rem] text-ink">
-                Untuk <span className="font-medium">{reveal.name}</span>
+                For <span className="font-medium">{reveal.name}</span>
               </p>
               <p className="mt-2 flex items-start gap-2 rounded-lg border border-warn/35 bg-warn/8 px-3.5 py-2.5 text-[0.8125rem] leading-relaxed text-warn">
                 <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
                 <span>
-                  Salin sekarang. Server hanya menyimpan hash-nya, jadi link ini TIDAK bisa
-                  ditampilkan lagi setelah panel ini ditutup — satu-satunya jalan adalah membuat
-                  ulang link, yang mematikan link ini.
+                  Copy it now. The server stores only its hash, so this link CANNOT be shown
+                  again once this panel is closed — the only way is to regenerate it, which kills
+                  this one.
                 </span>
               </p>
               <div className="mt-3">
                 <CopyField
                   value={reveal.url}
-                  whatsappText={`Undangan ${event.title} untuk ${reveal.name}:`}
+                  whatsappText={`${event.title} invitation for ${reveal.name}:`}
                 />
               </div>
             </div>

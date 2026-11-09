@@ -25,8 +25,8 @@ export function TerminalPanel({ guestName, eventTitle, status }: TerminalPanelPr
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [lines, setLines] = useState<string[]>([
-    "birthday://protocol — terminal tamu (opsional)",
-    'Ketik "help" lalu Enter. RSVP tetap bisa dilakukan tanpa terminal.',
+    "birthday://protocol — guest terminal (optional)",
+    'Type "help" then Enter. You can RSVP without using this terminal.',
   ]);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
@@ -56,8 +56,8 @@ export function TerminalPanel({ guestName, eventTitle, status }: TerminalPanelPr
         className="tap flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-panel-2/60 sm:px-5"
       >
         <TerminalSquare className="size-4 shrink-0 text-cyan-neon" aria-hidden="true" />
-        <span className="font-mono text-[0.8125rem] text-ink">Terminal (opsional)</span>
-        <span className="label-mono ml-auto hidden sm:inline">tidak wajib untuk RSVP</span>
+        <span className="font-mono text-[0.8125rem] text-ink">Terminal (optional)</span>
+        <span className="label-mono ml-auto hidden sm:inline">not required to RSVP</span>
         <ChevronDown
           className={cx("size-4 shrink-0 text-ink-faint transition-transform", open && "rotate-180")}
           aria-hidden="true"
@@ -72,7 +72,7 @@ export function TerminalPanel({ guestName, eventTitle, status }: TerminalPanelPr
             aria-live="polite"
           >
             {lines.length === 0 ? (
-              <p className="text-ink-faint">(kosong)</p>
+              <p className="text-ink-faint">(empty)</p>
             ) : (
               lines.map((line, index) => (
                 <p
@@ -94,7 +94,7 @@ export function TerminalPanel({ guestName, eventTitle, status }: TerminalPanelPr
             }}
           >
             <label htmlFor="terminal-input" className="sr-only">
-              Perintah terminal
+              Terminal command
             </label>
             <span aria-hidden="true" className="caret grid place-items-center font-mono text-violet-neon">
               $
@@ -129,32 +129,32 @@ function resolve(
   switch (command) {
     case "help":
       return [
-        "Perintah yang tersedia:",
-        "  help     — tampilkan daftar ini",
-        "  whoami   — nama tamu pada undangan ini",
-        "  mission  — ringkasan acara",
-        "  clear    — bersihkan layar",
+        "Available commands:",
+        "  help     — show this list",
+        "  whoami   — the guest name on this invitation",
+        "  mission  — event summary",
+        "  clear    — clear the screen",
       ];
     case "whoami":
-      return [context.guestName, "kapasitas: 1 orang (tanpa +1)"];
+      return [context.guestName, "admits: 1 person (no +1)"];
     case "mission":
       return [
-        `acara  : ${context.eventTitle}`,
+        `event  : ${context.eventTitle}`,
         `rsvp   : ${
           context.status === "attending"
-            ? "Hadir"
+            ? "Attending"
             : context.status === "maybe"
-              ? "Belum pasti"
+              ? "Maybe"
               : context.status === "declined"
-                ? "Tidak hadir"
-                : "belum dijawab"
+                ? "Can\'t make it"
+                : "not answered yet"
         }`,
-        "catatan: detail lengkap ada di kartu acara di atas.",
+        "note   : full details are on the event card above.",
       ];
     default:
       return [
-        `perintah tidak dikenal: ${command}`,
-        'coba "help". terminal ini hanya hiasan dan tidak menjalankan apa pun di server.',
+        `unknown command: ${command}`,
+        'try "help". this terminal is decorative and runs nothing on the server.',
       ];
   }
 }

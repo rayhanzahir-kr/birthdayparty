@@ -10,7 +10,7 @@ export async function guardAdminRequest(
   request: Request,
 ): Promise<{ ok: true; admin: AdminIdentity } | { ok: false; response: Response }> {
   if (!verifySameOrigin(request)) {
-    return { ok: false, response: errorResponse("Origin tidak dikenal.", 403) };
+    return { ok: false, response: errorResponse("Unrecognized origin.", 403) };
   }
 
   const auth = await requireAdmin();
@@ -19,9 +19,9 @@ export async function guardAdminRequest(
   if (auth.reason === "not_configured") {
     return {
       ok: false,
-      response: errorResponse("Supabase belum dikonfigurasi di server.", 503),
+      response: errorResponse("Supabase is not configured on the server.", 503),
     };
   }
   // Pesan generik: tidak membedakan "belum login" dan "bukan admin".
-  return { ok: false, response: errorResponse("Akses ditolak.", 403) };
+  return { ok: false, response: errorResponse("Access denied.", 403) };
 }

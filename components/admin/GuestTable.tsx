@@ -17,12 +17,12 @@ import { RSVP_STATUS_LABEL, type GuestSummaryRow, type RsvpStatus } from "@/lib/
 type FilterValue = "all" | RsvpStatus | "pending" | "inactive";
 
 const FILTERS: Array<{ value: FilterValue; label: string }> = [
-  { value: "all", label: "Semua" },
-  { value: "pending", label: "Belum menjawab" },
-  { value: "attending", label: "Hadir" },
-  { value: "maybe", label: "Belum pasti" },
-  { value: "declined", label: "Tidak hadir" },
-  { value: "inactive", label: "Nonaktif" },
+  { value: "all", label: "All" },
+  { value: "pending", label: "No answer" },
+  { value: "attending", label: "Attending" },
+  { value: "maybe", label: "Maybe" },
+  { value: "declined", label: "Can't make it" },
+  { value: "inactive", label: "Deactivated" },
 ];
 
 interface GuestTableProps {
@@ -70,7 +70,7 @@ export function GuestTable({
     <Panel>
       <PanelHeader
         title="guests.list"
-        meta={`${visible.length} / ${guests.length} tamu`}
+        meta={`${visible.length} / ${guests.length} guests`}
         accent="cyan"
       />
 
@@ -78,7 +78,7 @@ export function GuestTable({
         <div className="flex flex-col gap-2 sm:flex-row">
           <div className="relative grow">
             <label htmlFor="guest-search" className="sr-only">
-              Cari nama tamu
+              Search guest name
             </label>
             <Search
               className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-ink-faint"
@@ -89,7 +89,7 @@ export function GuestTable({
               type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Cari nama tamu…"
+              placeholder="Search guest name…"
               className={cx(inputClass, "pl-10")}
             />
           </div>
@@ -104,7 +104,7 @@ export function GuestTable({
           </button>
         </div>
 
-        <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter status">
+        <div className="flex flex-wrap gap-1.5" role="group" aria-label="Status filter">
           {FILTERS.map((item) => (
             <button
               key={item.value}
@@ -130,7 +130,7 @@ export function GuestTable({
             {error}
           </p>
           <button type="button" onClick={onRefresh} className={buttonClass("ghost", "mt-4")}>
-            <RefreshCw className="size-4" aria-hidden="true" /> Coba lagi
+            <RefreshCw className="size-4" aria-hidden="true" /> Try again
           </button>
         </div>
       ) : visible.length === 0 ? (
@@ -138,8 +138,8 @@ export function GuestTable({
           <Inbox className="mx-auto size-7 text-ink-faint" aria-hidden="true" />
           <p className="mt-3 text-[0.875rem] text-ink-muted">
             {guests.length === 0
-              ? "Belum ada tamu. Tambahkan tamu pertama di panel atas."
-              : "Tidak ada tamu yang cocok dengan pencarian atau filter ini."}
+              ? "No guests yet. Add your first guest in the panel above."
+              : "No guests match this search or filter."}
           </p>
         </div>
       ) : (
@@ -181,7 +181,7 @@ function GuestRow({
         <div className="min-w-0">
           <p className="truncate font-medium text-ink">{guest.name}</p>
           <p className="label-mono mt-1">
-            Ditambahkan {formatShortDateTime(guest.created_at, timezone)}
+            Added {formatShortDateTime(guest.created_at, timezone)}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-1.5">
@@ -192,16 +192,16 @@ function GuestRow({
             tone={guest.is_active ? "info" : "idle"}
             glyph={guest.is_active ? "◉" : "◌"}
           >
-            {guest.is_active ? "Link aktif" : "Link nonaktif"}
+            {guest.is_active ? "Link active" : "Link disabled"}
           </StatusPill>
         </div>
       </div>
 
       {guest.status ? (
         <p className="label-mono mt-2">
-          Dijawab {formatShortDateTime(guest.responded_at, timezone)}
+          Answered {formatShortDateTime(guest.responded_at, timezone)}
           {guest.updated_at && guest.updated_at !== guest.responded_at
-            ? ` · diubah ${formatShortDateTime(guest.updated_at, timezone)}`
+            ? ` · changed ${formatShortDateTime(guest.updated_at, timezone)}`
             : ""}
         </p>
       ) : null}
@@ -221,7 +221,7 @@ function GuestRow({
           className={buttonClass("ghost", "px-3 py-2 text-[0.75rem]")}
         >
           {busy ? <Spinner /> : <RefreshCw className="size-3.5" aria-hidden="true" />}
-          Buat ulang link
+          Regenerate link
         </button>
         <button
           type="button"
@@ -234,11 +234,11 @@ function GuestRow({
         >
           {guest.is_active ? (
             <>
-              <Link2Off className="size-3.5" aria-hidden="true" /> Nonaktifkan link
+              <Link2Off className="size-3.5" aria-hidden="true" /> Disable link
             </>
           ) : (
             <>
-              <Link2 className="size-3.5" aria-hidden="true" /> Aktifkan kembali
+              <Link2 className="size-3.5" aria-hidden="true" /> Re-enable
             </>
           )}
         </button>
@@ -260,6 +260,6 @@ function rsvpPill(status: RsvpStatus | null): {
     case "declined":
       return { label: RSVP_STATUS_LABEL.declined, glyph: "✕", tone: "bad" };
     default:
-      return { label: "Belum menjawab", glyph: "○", tone: "idle" };
+      return { label: "No answer", glyph: "○", tone: "idle" };
   }
 }

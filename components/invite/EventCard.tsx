@@ -11,7 +11,7 @@ export function EventCard({ event }: { event: InvitationView["event"] }) {
   const dateText = formatEventDateTime(event.event_date, event.timezone);
   const deadlineText = event.rsvp_deadline
     ? formatEventDateTime(event.rsvp_deadline, event.timezone)
-    : "Tidak ditetapkan";
+    : "Not set";
 
   return (
     <Panel>
@@ -29,23 +29,23 @@ export function EventCard({ event }: { event: InvitationView["event"] }) {
         ) : null}
 
         <dl className="mt-6 grid gap-x-6 gap-y-4 sm:grid-cols-2">
-          <Row icon={<UserRound className="size-4" />} label="Penyelenggara" value={event.host_name} />
+          <Row icon={<UserRound className="size-4" />} label="Host" value={event.host_name} />
           <Row
             icon={<CalendarClock className="size-4" />}
-            label="Tanggal & jam"
+            label="Date & time"
             value={dateText}
             pending={!event.event_date}
           />
           <Row
             icon={<MapPin className="size-4" />}
-            label="Lokasi"
+            label="Location"
             value={event.location_name}
             href={event.location_url}
           />
           <Row icon={<Shirt className="size-4" />} label="Dress code" value={event.dress_code} />
           <Row
             icon={<Hourglass className="size-4" />}
-            label="Batas RSVP"
+            label="RSVP deadline"
             value={deadlineText}
             pending={!event.rsvp_deadline}
           />
@@ -53,7 +53,8 @@ export function EventCard({ event }: { event: InvitationView["event"] }) {
 
         {!event.event_date ? (
           <p className="mt-5 rounded-lg border border-warn/30 bg-warn/8 px-3.5 py-2.5 text-[0.8125rem] text-warn">
-            Tanggal pasti belum diumumkan. Jawabanmu tetap tercatat dan detail akan menyusul.
+            The exact date hasn't been announced yet. Your answer is still recorded and details
+            will follow.
           </p>
         ) : null}
       </div>
@@ -92,7 +93,7 @@ function Row({
             >
               {value}
               <ExternalLink className="size-3.5 shrink-0" aria-hidden="true" />
-              <span className="sr-only">(buka peta di tab baru)</span>
+              <span className="sr-only">(opens map in a new tab)</span>
             </a>
           ) : (
             value

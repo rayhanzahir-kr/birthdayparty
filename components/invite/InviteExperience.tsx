@@ -48,7 +48,7 @@ export function InviteExperience({
   }
 
   const respondedLabel = saved
-    ? `Terakhir diperbarui ${formatShortDateTime(saved.updated_at, invitation.event.timezone)} (${invitation.event.timezone})`
+    ? `Last updated ${formatShortDateTime(saved.updated_at, invitation.event.timezone)} (${invitation.event.timezone})`
     : null;
 
   return (
@@ -66,7 +66,7 @@ export function InviteExperience({
             <PanelHeader
               icon={<GitPullRequest className="size-4" />}
               title="rsvp.pull-request"
-              meta={demo ? "mode demo" : "disimpan di server"}
+              meta={demo ? "demo mode" : "saved on the server"}
               accent="cyan"
             />
             <PullRequestHeader guestName={invitation.guest.name} status={saved?.status ?? null} />
@@ -94,8 +94,8 @@ export function InviteExperience({
           />
 
           <p className="px-1 text-center font-mono text-[0.6875rem] leading-relaxed text-ink-faint">
-            Link ini bersifat personal. Siapa pun yang memegang link dapat membaca undangan dan
-            mengubah satu jawaban RSVP, jadi jangan dibagikan ke orang lain.
+            This link is personal. Anyone who has it can read the invitation and change one RSVP
+            answer, so please don't share it with others.
           </p>
         </div>
       </div>

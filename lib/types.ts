@@ -3,9 +3,9 @@ export type RsvpStatus = "attending" | "maybe" | "declined";
 export const RSVP_STATUSES: readonly RsvpStatus[] = ["attending", "maybe", "declined"] as const;
 
 export const RSVP_STATUS_LABEL: Record<RsvpStatus, string> = {
-  attending: "Hadir",
-  maybe: "Belum pasti",
-  declined: "Tidak hadir",
+  attending: "Attending",
+  maybe: "Maybe",
+  declined: "Can't make it",
 };
 
 export interface EventRecord {

@@ -1,16 +1,16 @@
 #!/usr/bin/env node
 /**
- * Setup INVITE_PASSWORD_HASH.
+ * Set up INVITE_PASSWORD_HASH.
  *
- * Input dibaca TERSEMBUNYI dari TTY (tanpa echo), atau dari stdin bila dipipa.
- * Nilai password TIDAK pernah diterima sebagai argumen shell — argumen tersimpan
- * di riwayat shell dan terlihat di daftar proses.
+ * Input is read HIDDEN from the TTY (no echo), or from stdin when piped.
+ * The password is NEVER accepted as a shell argument — arguments are stored in
+ * shell history and visible in the process list.
  *
- * Pemakaian:
- *   npm run hash-password                  # prompt tersembunyi
- *   printf '10.11.2004' | npm run hash-password --silent
+ * Usage:
+ *   npm run hash-password                  # hidden prompt
+ *   printf 'DD.MM.YYYY' | npm run hash-password --silent
  *
- * Yang dicetak hanya HASH-nya, bukan password-nya.
+ * Only the HASH is printed, never the password.
  */
 import { createHash } from "node:crypto";
 import { createInterface } from "node:readline";
@@ -19,7 +19,7 @@ import process from "node:process";
 const DOT = /^(\d{2})\.(\d{2})\.(\d{4})$/;
 const DASH = /^(\d{2})-(\d{2})-(\d{4})$/;
 
-/** Harus identik dengan canonicalizeInvitePassword() di lib/password.ts. */
+/** Must stay identical to canonicalizeInvitePassword() in lib/password-format.ts. */
 function canonicalize(raw) {
   if (typeof raw !== "string" || raw.length > 32) return null;
   const trimmed = raw.trim();
@@ -52,7 +52,7 @@ function readFromStdinPipe() {
   });
 }
 
-/** Prompt tanpa echo: karakter yang diketik tidak muncul di layar. */
+/** Prompt without echo: typed characters do not appear on screen. */
 function readHiddenFromTty(promptText) {
   return new Promise((resolve, reject) => {
     const rl = createInterface({ input: process.stdin, output: process.stderr, terminal: true });
@@ -62,7 +62,7 @@ function readHiddenFromTty(promptText) {
       const text = char.toString("utf8");
       if (text === "\u0003") {
         cleanup();
-        reject(new Error("dibatalkan"));
+        reject(new Error("cancelled"));
       }
     };
 
@@ -72,7 +72,7 @@ function readHiddenFromTty(promptText) {
       rl.close();
     }
 
-    // Menonaktifkan echo terminal selama input berjalan.
+    // Disable terminal echo while input is being read.
     rl.output.write = () => true;
     process.stdin.on("data", onData);
 
@@ -87,40 +87,40 @@ function readHiddenFromTty(promptText) {
 async function main() {
   if (process.argv.length > 2) {
     process.stderr.write(
-      "Skrip ini tidak menerima password sebagai argumen (argumen bocor ke riwayat shell\n" +
-        "dan daftar proses). Jalankan tanpa argumen, atau pipe lewat stdin.\n",
+      "This script does not accept the password as an argument (arguments leak into\n" +
+        "shell history and the process list). Run it with no arguments, or pipe via stdin.\n",
     );
     process.exit(2);
   }
 
   const raw = process.stdin.isTTY
-    ? await readHiddenFromTty("Masukkan tanggal lahir (DD.MM.YYYY atau DD-MM-YYYY): ")
+    ? await readHiddenFromTty("Enter the birthday (DD.MM.YYYY or DD-MM-YYYY): ")
     : await readFromStdinPipe();
 
   const canonical = canonicalize(raw);
   if (canonical === null) {
     process.stderr.write(
-      "\nFormat tidak diterima.\n" +
-        "Gunakan dua digit hari, dua digit bulan, empat digit tahun, dengan separator\n" +
-        "titik ATAU tanda hubung secara konsisten. Contoh bentuk: DD.MM.YYYY / DD-MM-YYYY.\n" +
-        "Separator campuran dan tanggal yang tidak ada di kalender ditolak.\n",
+      "\nFormat not accepted.\n" +
+        "Use two-digit day, two-digit month, four-digit year, with dot OR hyphen\n" +
+        "separators used consistently. Shape: DD.MM.YYYY / DD-MM-YYYY.\n" +
+        "Mixed separators and dates that do not exist are rejected.\n",
     );
     process.exit(1);
   }
 
   const hash = createHash("sha256").update(canonical, "utf8").digest("hex");
 
-  // stderr untuk penjelasan, stdout untuk hash saja -> aman untuk dipipa.
-  process.stderr.write("\nHash berhasil dibuat. Tambahkan baris ini ke .env.local\n");
-  process.stderr.write("(dan ke Environment Variables Vercel, scope server):\n\n");
+  // stderr for explanation, stdout for the hash only -> safe to pipe.
+  process.stderr.write("\nHash created. Add this line to .env.local\n");
+  process.stderr.write("(and to your Vercel Environment Variables, server scope):\n\n");
   process.stdout.write(`INVITE_PASSWORD_HASH=${hash}\n`);
   process.stderr.write(
-    "\nCatatan: nilai tanggal lahirnya sendiri tidak dicetak, tidak disimpan, dan\n" +
-      "tidak boleh diletakkan di variabel NEXT_PUBLIC apa pun.\n",
+    "\nNote: the birthday value itself is never printed, never stored, and must not\n" +
+      "be placed in any NEXT_PUBLIC variable.\n",
   );
 }
 
 main().catch((error) => {
-  process.stderr.write(`\nGagal: ${error.message}\n`);
+  process.stderr.write(`\nFailed: ${error.message}\n`);
   process.exit(1);
 });

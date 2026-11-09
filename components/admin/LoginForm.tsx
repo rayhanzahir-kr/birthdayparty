@@ -38,7 +38,7 @@ export function LoginForm() {
         | null;
 
       if (!response.ok || !payload?.ok) {
-        setError(payload?.error ?? "Login gagal. Coba lagi.");
+        setError(payload?.error ?? "Login failed. Please try again.");
         setLoading(false);
         return;
       }
@@ -48,7 +48,7 @@ export function LoginForm() {
       router.replace("/admin/dashboard");
       router.refresh();
     } catch {
-      setError("Jaringan bermasalah dan login belum diproses. Coba lagi.");
+      setError("Network trouble — the login was not processed. Please try again.");
       setLoading(false);
     }
   }
@@ -56,9 +56,9 @@ export function LoginForm() {
   return (
     <Panel className="px-5 py-7 sm:px-7">
       <p className="label-mono text-violet-neon">birthday://protocol · admin</p>
-      <h1 className="mt-3 text-2xl font-semibold tracking-tight text-ink">Login penyelenggara</h1>
+      <h1 className="mt-3 text-2xl font-semibold tracking-tight text-ink">Host sign in</h1>
       <p className="mt-2 text-[0.875rem] leading-relaxed text-ink-muted">
-        Akun dibuat oleh operator lewat Supabase. Tidak ada pendaftaran publik di halaman ini.
+        Accounts are created by the operator in Supabase. There is no public sign-up here.
       </p>
 
       <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4" noValidate>
@@ -102,11 +102,11 @@ export function LoginForm() {
         <button type="submit" disabled={loading} className={buttonClass("primary", "w-full")}>
           {loading ? (
             <>
-              <Spinner /> Memeriksa…
+              <Spinner /> Checking…
             </>
           ) : (
             <>
-              <LogIn className="size-4" aria-hidden="true" /> Masuk
+              <LogIn className="size-4" aria-hidden="true" /> Sign in
             </>
           )}
         </button>
@@ -114,8 +114,8 @@ export function LoginForm() {
 
       <p className="mt-6 flex items-start gap-2 font-mono text-[0.6875rem] leading-relaxed text-ink-faint">
         <ShieldCheck className="mt-px size-3.5 shrink-0" aria-hidden="true" />
-        Login admin memakai Supabase Auth. Ini terpisah dari kunci tanggal lahir yang dipakai tamu
-        untuk mengonfirmasi kehadiran.
+        Admin sign-in uses Supabase Auth. It is separate from the birthday key guests use to
+        confirm attendance.
       </p>
     </Panel>
   );

@@ -27,7 +27,7 @@ const optionalUrl = z
   .max(2000)
   .transform((v) => v.trim())
   .refine((v) => v.length === 0 || sanitizeExternalUrl(v) !== null, {
-    message: "URL harus memakai http:// atau https://",
+    message: "URL must start with http:// or https://",
   })
   .transform((v) => (v.length === 0 ? null : sanitizeExternalUrl(v)));
 
@@ -37,7 +37,7 @@ export const guestNameSchema = z
   .max(300)
   .transform((v) => v.trim().replace(/\s+/g, " "))
   .refine((v) => v.length >= NAME_MIN_LENGTH && v.length <= NAME_MAX_LENGTH, {
-    message: `Nama harus 1–${NAME_MAX_LENGTH} karakter.`,
+    message: `Name must be 1–${NAME_MAX_LENGTH} characters.`,
   });
 
 export const createGuestSchema = z.object({ name: guestNameSchema }).strict();
@@ -57,7 +57,7 @@ export const rsvpSubmitSchema = z
       .max(2000)
       .transform((v) => v.trim())
       .refine((v) => v.length <= MESSAGE_MAX_LENGTH, {
-        message: `Pesan maksimal ${MESSAGE_MAX_LENGTH} karakter.`,
+        message: `Message can be at most ${MESSAGE_MAX_LENGTH} characters.`,
       })
       .transform((v) => (v.length === 0 ? null : v))
       .optional()
@@ -73,7 +73,7 @@ const optionalDateTime = z
   .max(40)
   .transform((v) => v.trim())
   .refine((v) => v.length === 0 || !Number.isNaN(new Date(v).getTime()), {
-    message: "Format tanggal tidak valid.",
+    message: "Invalid date format.",
   })
   .transform((v) => (v.length === 0 ? null : new Date(v).toISOString()))
   .nullable()
@@ -84,7 +84,7 @@ export const eventSettingsSchema = z
     title: z.string().min(1).max(120).transform((v) => v.trim()),
     host_name: z.string().min(1).max(120).transform((v) => v.trim()),
     timezone: z.string().min(1).max(64).refine(isValidTimeZone, {
-      message: "Zona waktu IANA tidak dikenal.",
+      message: "Unknown IANA time zone.",
     }),
     event_date: optionalDateTime,
     location_name: z.string().min(1).max(200).transform((v) => v.trim()),
@@ -105,20 +105,20 @@ export const MAX_BODY_BYTES = 8 * 1024;
 export async function readJsonBody(request: Request): Promise<unknown> {
   const contentType = request.headers.get("content-type") ?? "";
   if (!contentType.toLowerCase().includes("application/json")) {
-    throw new BodyError("Content-Type harus application/json.");
+    throw new BodyError("Content-Type must be application/json.");
   }
   const declaredLength = Number(request.headers.get("content-length") ?? "0");
   if (Number.isFinite(declaredLength) && declaredLength > MAX_BODY_BYTES) {
-    throw new BodyError("Payload terlalu besar.");
+    throw new BodyError("Payload too large.");
   }
   const text = await request.text();
   if (text.length > MAX_BODY_BYTES) {
-    throw new BodyError("Payload terlalu besar.");
+    throw new BodyError("Payload too large.");
   }
   try {
     return JSON.parse(text) as unknown;
   } catch {
-    throw new BodyError("Body bukan JSON yang valid.");
+    throw new BodyError("Body is not valid JSON.");
   }
 }
 
@@ -132,14 +132,14 @@ export class BodyError extends Error {}
  * field asing agar respons tidak memetakan skema internal.
  */
 export function describeIssue(issue: { code?: string; message?: string; path?: PropertyKey[] } | undefined): string {
-  if (!issue) return "Data tidak valid.";
+  if (!issue) return "Invalid data.";
   if (issue.code === "unrecognized_keys") {
-    return "Ada data tambahan yang tidak diizinkan dalam permintaan ini.";
+    return "This request contains fields that are not allowed.";
   }
   if (issue.code === "invalid_value" || issue.code === "invalid_enum_value") {
-    return "Pilihan jawaban tidak dikenal.";
+    return "Unknown answer option.";
   }
   return issue.message && /[a-z]/.test(issue.message) && !/^[A-Z][a-z]+ /.test(issue.message)
     ? issue.message
-    : issue.message ?? "Data tidak valid.";
+    : issue.message ?? "Invalid data.";
 }

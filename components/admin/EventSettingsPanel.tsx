@@ -65,7 +65,7 @@ export function EventSettingsPanel({
 
     if (form.event_date_local && !eventDateIso) {
       setSaving(false);
-      setFieldError("Tanggal acara tidak bisa dibaca. Periksa kembali isinya.");
+      setFieldError("Could not read the event date. Please check the value.");
       return;
     }
 
@@ -91,17 +91,17 @@ export function EventSettingsPanel({
         | null;
 
       if (!response.ok || !payload?.ok || !payload.event) {
-        setNotice({ tone: "bad", text: payload?.error ?? "Gagal menyimpan pengaturan." });
+        setNotice({ tone: "bad", text: payload?.error ?? "Failed to save settings." });
         setSaving(false);
         return;
       }
 
       onSaved(payload.event);
-      setNotice({ tone: "ok", text: "Pengaturan acara tersimpan dan sudah terlihat di undangan." });
+      setNotice({ tone: "ok", text: "Event settings saved and now visible on invitations." });
     } catch {
       setNotice({
         tone: "bad",
-        text: "Jaringan bermasalah dan pengaturan belum tersimpan. Isianmu masih ada.",
+        text: "Network trouble — settings were not saved. Your input is still here.",
       });
     }
     setSaving(false);
@@ -113,7 +113,7 @@ export function EventSettingsPanel({
       <form onSubmit={handleSubmit} className="flex flex-col gap-4 px-4 py-5 sm:px-5" noValidate>
         <fieldset disabled={saving} className="contents">
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field id="ev-title" label="Judul acara" required>
+            <Field id="ev-title" label="Event title" required>
               <input
                 id="ev-title"
                 value={form.title}
@@ -123,7 +123,7 @@ export function EventSettingsPanel({
                 className={inputClass}
               />
             </Field>
-            <Field id="ev-host" label="Nama penyelenggara" required>
+            <Field id="ev-host" label="Host name" required>
               <input
                 id="ev-host"
                 value={form.host_name}
@@ -137,8 +137,8 @@ export function EventSettingsPanel({
 
           <Field
             id="ev-tz"
-            label="Zona waktu acara (IANA)"
-            hint="Contoh: Europe/Berlin, Asia/Jakarta. Semua tanggal di bawah dibaca pada zona ini."
+            label="Event time zone (IANA)"
+            hint="Example: Europe/Berlin, Asia/Jakarta. All dates below are read in this zone."
             required
           >
             <input
@@ -154,8 +154,8 @@ export function EventSettingsPanel({
           <div className="grid gap-4 sm:grid-cols-2">
             <Field
               id="ev-date"
-              label="Tanggal & jam mulai"
-              hint={`Dibaca pada zona ${form.timezone}. Kosongkan bila belum ditentukan.`}
+              label="Start date & time"
+              hint={`Read in the ${form.timezone} zone. Leave empty if not decided yet.`}
               error={fieldError}
             >
               <input
@@ -168,8 +168,8 @@ export function EventSettingsPanel({
             </Field>
             <Field
               id="ev-deadline"
-              label="Batas RSVP"
-              hint={`Dibaca pada zona ${form.timezone}. Tidak boleh sesudah waktu mulai acara.`}
+              label="RSVP deadline"
+              hint={`Read in the ${form.timezone} zone. Cannot be after the event start time.`}
             >
               <input
                 id="ev-deadline"
@@ -182,7 +182,7 @@ export function EventSettingsPanel({
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field id="ev-loc" label="Nama lokasi" required>
+            <Field id="ev-loc" label="Location name" required>
               <input
                 id="ev-loc"
                 value={form.location_name}
@@ -192,7 +192,7 @@ export function EventSettingsPanel({
                 className={inputClass}
               />
             </Field>
-            <Field id="ev-locurl" label="URL peta (opsional)" hint="Harus http:// atau https://">
+            <Field id="ev-locurl" label="Map URL (optional)" hint="Must be http:// or https://">
               <input
                 id="ev-locurl"
                 type="url"
@@ -216,7 +216,7 @@ export function EventSettingsPanel({
             />
           </Field>
 
-          <Field id="ev-desc" label="Deskripsi" hint={`${form.description.length}/1200 karakter`}>
+          <Field id="ev-desc" label="Description" hint={`${form.description.length}/1200 characters`}>
             <textarea
               id="ev-desc"
               value={form.description}
@@ -243,11 +243,11 @@ export function EventSettingsPanel({
           <button type="submit" disabled={saving} className={buttonClass("primary", "sm:self-start")}>
             {saving ? (
               <>
-                <Spinner /> Menyimpan…
+                <Spinner /> Saving…
               </>
             ) : (
               <>
-                <Save className="size-4" aria-hidden="true" /> Simpan pengaturan
+                <Save className="size-4" aria-hidden="true" /> Save settings
               </>
             )}
           </button>

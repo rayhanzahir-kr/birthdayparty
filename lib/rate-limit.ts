@@ -121,12 +121,12 @@ function errorKind(cause: unknown): string {
 
 export function retryMessage(result: RateLimitResult): string {
   if (result.degraded) {
-    return "Pemeriksaan keamanan sedang tidak tersedia. Coba lagi dalam satu menit.";
+    return "Security check is unavailable right now. Please try again in a minute.";
   }
   const seconds = result.retryAfterSeconds;
   if (seconds >= 60) {
     const minutes = Math.ceil(seconds / 60);
-    return `Terlalu banyak percobaan. Coba lagi dalam ${minutes} menit.`;
+    return `Too many attempts. Please try again in ${minutes} minute(s).`;
   }
-  return `Terlalu banyak percobaan. Coba lagi dalam ${seconds} detik.`;
+  return `Too many attempts. Please try again in ${seconds} seconds.`;
 }

@@ -66,7 +66,7 @@ export function BootSequence() {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
           role="region"
-          aria-label="Intro pembuka undangan"
+          aria-label="Invitation intro"
           onClick={() => setVisible(false)}
         >
           <div className="w-full max-w-sm font-mono text-[0.8125rem]">
@@ -102,7 +102,7 @@ export function BootSequence() {
               onClick={() => setVisible(false)}
               className="tap mt-5 font-mono text-[0.75rem] text-ink-muted underline decoration-dotted underline-offset-4 hover:text-cyan-neon"
             >
-              Lewati intro
+              Skip intro
             </button>
           </div>
         </motion.div>

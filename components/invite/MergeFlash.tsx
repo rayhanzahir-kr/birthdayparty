@@ -57,7 +57,7 @@ export function MergeFlash({ show, onDone }: { show: boolean; onDone: () => void
             </svg>
             <p className="flex items-center gap-2 font-mono text-sm text-ok">
               <GitMerge className="size-4" />
-              merged — kamu resmi ikut
+              merged — you are officially in
             </p>
           </motion.div>
         </motion.div>

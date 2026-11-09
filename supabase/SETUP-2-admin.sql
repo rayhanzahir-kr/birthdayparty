@@ -1,20 +1,20 @@
 -- ============================================================
--- SETUP SUPABASE — LANGKAH 2 dari 2
+-- SUPABASE SETUP — STEP 2 of 2
 --
--- SEBELUM RUN: ganti email di bawah dengan email yang kamu pakai
--- saat membuat user di Authentication -> Users -> Add user.
+-- BEFORE RUNNING: replace the email below with the one you used
+-- when creating the user under Authentication -> Users -> Add user.
 -- ============================================================
 
 insert into public.admin_users (user_id, note)
-select id, 'penyelenggara utama'
+select id, 'primary host'
 from auth.users
-where email = 'rayhanzahir.kr@gmail.com'      -- <<< ganti baris ini
+where email = 'REPLACE-ME@example.com'      -- <<< change this line
 on conflict (user_id) do nothing;
 
 
--- Setelah Run, cek hasilnya. Harus muncul 1 baris berisi email kamu.
--- Kalau KOSONG, berarti email di atas tidak sama dengan email user di
--- Authentication -> Users (salah ketik, atau usernya belum dibuat).
+-- After running, check the result. It must show 1 row with your email.
+-- If it is EMPTY, the email above does not match the user in
+-- Authentication -> Users (typo, or the user was never created).
 select u.email, au.note, au.created_at
 from public.admin_users au
 join auth.users u on u.id = au.user_id;

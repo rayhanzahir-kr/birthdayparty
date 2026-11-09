@@ -14,26 +14,26 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   if (!guard.ok) return guard.response;
 
   const { id } = await context.params;
-  if (!UUID.test(id)) return errorResponse("Id tamu tidak valid.", 400);
+  if (!UUID.test(id)) return errorResponse("Invalid guest id.", 400);
 
   let raw: unknown;
   try {
     raw = await readJsonBody(request);
   } catch (cause) {
-    return errorResponse(cause instanceof BodyError ? cause.message : "Body tidak valid.", 400);
+    return errorResponse(cause instanceof BodyError ? cause.message : "Invalid request body.", 400);
   }
 
   const parsed = setActiveSchema.safeParse(raw);
-  if (!parsed.success) return errorResponse("Nilai is_active harus boolean.", 400);
+  if (!parsed.success) return errorResponse("Field is_active must be a boolean.", 400);
 
   const event = await getPrimaryEvent();
-  if (!event) return errorResponse("Acara belum ada.", 409);
+  if (!event) return errorResponse("No event found.", 409);
 
   try {
     const found = await setGuestActive(event.id, id, parsed.data.is_active);
-    if (!found) return errorResponse("Tamu tidak ditemukan.", 404);
+    if (!found) return errorResponse("Guest not found.", 404);
     return jsonResponse({ ok: true as const, is_active: parsed.data.is_active });
   } catch (cause) {
-    return errorResponse(cause instanceof Error ? cause.message : "Gagal mengubah status.", 500);
+    return errorResponse(cause instanceof Error ? cause.message : "Failed to change the status.", 500);
   }
 }

@@ -14,13 +14,13 @@ export async function GET(request: Request) {
   if (!guard.ok) return guard.response;
 
   const event = await getPrimaryEvent();
-  if (!event) return errorResponse("Acara belum ada. Jalankan migration seed.", 409);
+  if (!event) return errorResponse("No event found. Run the seed migration.", 409);
 
   try {
     const result = await listGuests(event.id);
     return jsonResponse({ ok: true as const, ...result, timezone: event.timezone });
   } catch {
-    return errorResponse("Gagal memuat daftar tamu.", 500);
+    return errorResponse("Failed to load the guest list.", 500);
   }
 }
 
@@ -38,18 +38,18 @@ export async function POST(request: Request) {
   try {
     raw = await readJsonBody(request);
   } catch (cause) {
-    return errorResponse(cause instanceof BodyError ? cause.message : "Body tidak valid.", 400);
+    return errorResponse(cause instanceof BodyError ? cause.message : "Invalid request body.", 400);
   }
 
   const parsed = createGuestSchema.safeParse(raw);
   if (!parsed.success) {
-    return errorResponse(parsed.error.issues[0]?.message ?? "Nama tidak valid.", 400, {
+    return errorResponse(parsed.error.issues[0]?.message ?? "Invalid name.", 400, {
       field: "name",
     });
   }
 
   const event = await getPrimaryEvent();
-  if (!event) return errorResponse("Acara belum ada. Jalankan migration seed.", 409);
+  if (!event) return errorResponse("No event found. Run the seed migration.", 409);
 
   try {
     const created = await createGuest(event.id, parsed.data.name);
@@ -60,6 +60,6 @@ export async function POST(request: Request) {
       inviteUrl: buildInviteUrl(getSiteUrl(), created.token),
     });
   } catch (cause) {
-    return errorResponse(cause instanceof Error ? cause.message : "Gagal menambah tamu.", 500);
+    return errorResponse(cause instanceof Error ? cause.message : "Failed to add the guest.", 500);
   }
 }
